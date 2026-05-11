@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureAcademicCyclesModuleAccess;
 use App\Http\Middleware\EnsureStaffModuleAccess;
+use App\Http\Middleware\EnsureStudentsModuleAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'staff.module' => EnsureStaffModuleAccess::class,
             'academic-cycles.module' => EnsureAcademicCyclesModuleAccess::class,
+            'students.module' => EnsureStudentsModuleAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

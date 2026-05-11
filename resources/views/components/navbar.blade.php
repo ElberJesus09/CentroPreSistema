@@ -24,6 +24,22 @@
                             Staff
                         </a>
                     @endcan
+                    @can('viewAny', \App\Models\AcademicCycleShift::class)
+                        <a
+                            href="{{ route('academic-cycles.index') }}"
+                            class="block px-4 py-2 text-sm text-neutral-800 hover:bg-neutral-50"
+                        >
+                            Academic Cycles
+                        </a>
+                    @endcan
+                    @can('viewAny', \App\Models\Student::class)
+                        <a
+                            href="{{ route('students.index') }}"
+                            class="block px-4 py-2 text-sm text-neutral-800 hover:bg-neutral-50"
+                        >
+                            Students
+                        </a>
+                    @endcan
                 </div>
             </details>
         </div>

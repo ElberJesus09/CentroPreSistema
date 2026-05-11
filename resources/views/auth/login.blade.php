@@ -27,5 +27,9 @@
                 Entrar
             </x-button>
         </form>
+        <p class="border-t border-neutral-100 px-6 py-4 text-center text-sm text-neutral-600">
+            ¿Postulante?
+            <a href="{{ route('pre-registration.create') }}" class="font-medium text-brand hover:underline">Registro publico</a>
+        </p>
     </div>
 @endsection

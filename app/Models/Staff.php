@@ -60,6 +60,18 @@ class Staff extends Authenticatable
         return $this->isSuperAdmin() || $this->isAdmin();
     }
 
+    /** Modulo alumnos: todos los roles de staff operativos. */
+    public function canAccessStudentsModule(): bool
+    {
+        $name = $this->role?->name;
+
+        return in_array($name, [
+            Role::NAME_SUPER_ADMIN,
+            Role::NAME_ADMIN,
+            Role::NAME_TRABAJADOR,
+        ], true);
+    }
+
     protected function casts(): array
     {
         return [

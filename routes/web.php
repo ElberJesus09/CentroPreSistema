@@ -6,8 +6,10 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\CampusController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PreRegistrationController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -15,6 +17,10 @@ Route::get('/', function () {
         ? redirect()->route('dashboard')
         : redirect()->route('login');
 });
+
+Route::get('pre-registration', [PreRegistrationController::class, 'create'])->name('pre-registration.create');
+Route::post('pre-registration', [PreRegistrationController::class, 'store'])->name('pre-registration.store');
+Route::get('register', static fn () => redirect()->route('pre-registration.create'))->name('register');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('login', [LoginController::class, 'create'])->name('login');
@@ -35,5 +41,9 @@ Route::middleware('auth')->group(function (): void {
         Route::resource('campuses', CampusController::class)->parameters(['campuses' => 'campus'])->except(['show']);
         Route::resource('shifts', ShiftController::class)->except(['show']);
         Route::resource('schedules', AcademicCycleShiftController::class)->parameters(['schedules' => 'schedule'])->except(['index', 'show']);
+    });
+
+    Route::middleware('students.module')->group(function (): void {
+        Route::resource('students', StudentController::class)->except(['show']);
     });
 });

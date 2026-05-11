@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             StaffSeeder::class,
             CampusSeeder::class,
             ShiftSeeder::class,
+            CareerSeeder::class,
         ]);
     }
 }
