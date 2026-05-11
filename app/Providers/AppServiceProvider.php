@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\AcademicCycleShift;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Parametro {schedule} en rutas del modulo academic cycles.
+        Route::bind('schedule', fn (string $value) => AcademicCycleShift::query()->whereKey($value)->firstOrFail());
     }
 }

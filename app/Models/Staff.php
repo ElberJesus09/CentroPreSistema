@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\StaffFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -26,7 +27,7 @@ use Illuminate\Notifications\Notifiable;
 #[Hidden(['password', 'remember_token'])]
 class Staff extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\StaffFactory> */
+    /** @use HasFactory<StaffFactory> */
     use HasFactory, Notifiable, SoftDeletes;
 
     /**
@@ -49,6 +50,12 @@ class Staff extends Authenticatable
 
     /** Acceso al modulo de empleados (sidebar y rutas). */
     public function canAccessStaffModule(): bool
+    {
+        return $this->isSuperAdmin() || $this->isAdmin();
+    }
+
+    /** Acceso a ciclos academicos, sedes y turnos (solo admin). */
+    public function canAccessAcademicCyclesModule(): bool
     {
         return $this->isSuperAdmin() || $this->isAdmin();
     }

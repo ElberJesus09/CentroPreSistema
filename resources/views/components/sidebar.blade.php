@@ -31,5 +31,17 @@
                 Staff
             </a>
         @endcan
+        @can('viewAny', \App\Models\AcademicCycleShift::class)
+            <a
+                href="{{ route('academic-cycles.index') }}"
+                @class([
+                    'rounded-md px-3 py-2 font-medium transition-colors',
+                    'bg-white/15 text-white' => str_starts_with((string) $current, 'academic-cycles.'),
+                    'text-white/85 hover:bg-white/10 hover:text-white' => ! str_starts_with((string) $current, 'academic-cycles.'),
+                ])
+            >
+                Academic Cycles
+            </a>
+        @endcan
     </nav>
 </aside>
