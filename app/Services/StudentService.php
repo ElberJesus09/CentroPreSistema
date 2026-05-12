@@ -86,8 +86,11 @@ class StudentService
                     $inner->where('status', true)
                         ->whereColumn('enrolled', '<', 'capacity');
                 });
-                if ($current !== null) {
-                    $q->orWhereKey($current->academic_cycle_shift_id);
+                if ($current !== null && $current->academic_cycle_shift_id !== null) {
+                    $q->orWhere(
+                        $q->getModel()->getQualifiedKeyName(),
+                        $current->academic_cycle_shift_id,
+                    );
                 }
             })
             ->with(['academicCycle', 'campus', 'shift'])
