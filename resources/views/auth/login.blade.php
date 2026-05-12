@@ -5,8 +5,8 @@
 @section('content')
     <div class="rounded-lg border border-neutral-200 bg-white shadow-sm">
         <div class="border-b border-neutral-100 px-6 py-4">
-            <h1 class="text-lg font-semibold text-neutral-900">Iniciar sesion</h1>
-            <p class="mt-1 text-sm text-neutral-600">Ingrese sus credenciales corporativas.</p>
+            <h1 class="text-lg font-semibold text-neutral-900">Acceso administrativo</h1>
+            <p class="mt-1 text-sm text-neutral-600">Credenciales del personal autorizado.</p>
         </div>
         <form method="post" action="{{ route('login') }}" class="space-y-4 px-6 py-6">
             @csrf
@@ -28,8 +28,7 @@
             </x-button>
         </form>
         <p class="border-t border-neutral-100 px-6 py-4 text-center text-sm text-neutral-600">
-            ¿Postulante?
-            <a href="{{ route('pre-registration.create') }}" class="font-medium text-brand hover:underline">Registro publico</a>
+            <a href="{{ route('home') }}" class="font-medium text-brand hover:underline">Volver al portal de admision</a>
         </p>
     </div>
 @endsection

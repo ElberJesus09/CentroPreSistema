@@ -1,58 +1,182 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Centro Pre Sistema
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplicación web Laravel para portal público de información y registro de alumnos, y panel administrativo bajo el prefijo `/admin`.
 
-## About Laravel
+## Requisitos
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.5+
+- Composer
+- Base de datos compatible con Laravel (SQLite, MySQL, etc.)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Puesta en marcha (resumen)
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Ajusta `APP_URL` y la conexión de base de datos en `.env`.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Rutas del portal público (usuario visitante)
 
-## Code of Conduct
+No requieren sesión. Son la cara visible del sitio: inicio, catálogos y flujo de preinscripción.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+| Método | URI | Nombre Laravel | Qué hace |
+|--------|-----|----------------|----------|
+| `GET` | `/` | `home` | Página de inicio pública (resumen / enlaces al portal). |
+| `GET` | `/careers` | `careers` | Listado de carreras activas (catálogo público). |
+| `GET` | `/campuses` | `campuses` | Listado de sedes activas (catálogo público). |
+| * | `/register` | `register` | Redirige a `/registration` (alias amigable). |
+| * | `/pre-registration` | `pre-registration.create` | Redirige a `/registration`. |
+| `GET` | `/registration` | `registration.start` | Inicia el asistente de registro (paso inicial). |
+| `GET` | `/registration/step/{step}` | `registration.step.show` | Muestra el paso `{step}` del formulario (`{step}` numérico: 1–4). |
+| `POST` | `/registration/step/1` | `registration.step1.store` | Guarda datos del paso 1 (p. ej. datos del estudiante). |
+| `POST` | `/registration/step/2` | `registration.step2.store` | Guarda paso 2 (p. ej. apoderado). |
+| `POST` | `/registration/step/3` | `registration.step3.store` | Guarda paso 3 (p. ej. colegio de procedencia). |
+| `POST` | `/registration/step/4` | `registration.step4.store` | Guarda paso 4 (carrera y turno con cupo). |
+| `POST` | `/registration/finish` | `registration.finish` | Envío final: valida todo y persiste el registro. |
 
-## Security Vulnerabilities
+### Límites de uso (portal público)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- Rutas bajo `throttle:public-registration` (pasos del wizard): **20 peticiones por minuto** por IP.
+- `POST /registration/finish` usa `throttle:public-registration-finish`: **5 por minuto** por IP.
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Rutas del panel administrativo (`/admin`)
+
+Prefijo común: **`/admin`**. El login de staff vive aquí; el resto exige usuario autenticado.
+
+### Autenticación
+
+| Método | URI | Nombre | Qué hace |
+|--------|-----|--------|----------|
+| `GET` | `/admin/login` | `login` | Formulario de inicio de sesión (solo invitados: middleware `guest`). |
+| `POST` | `/admin/login` | — | Procesa login. **10 intentos por minuto** por IP (`throttle:admin-login`). |
+| `POST` | `/admin/logout` | `logout` | Cierra sesión (requiere `auth`). |
+
+Los usuarios no autenticados que intenten acceder a rutas protegidas son redirigidos a `route('login')` (`/admin/login`). Tras login, Laravel redirige al `dashboard`.
+
+### Área autenticada (todas `GET`/`POST`/`PUT`/`PATCH`/`DELETE` bajo `/admin` con `auth`)
+
+| Método | URI | Nombre | Qué hace |
+|--------|-----|--------|----------|
+| `GET` | `/admin/dashboard` | `dashboard` | Panel principal tras iniciar sesión. |
+
+#### Módulo Staff (`middleware: staff.module`)
+
+Gestión de usuarios personal / staff (sin ruta `show`).
+
+| Método | URI | Nombre |
+|--------|-----|--------|
+| `GET` | `/admin/staff` | `staff.index` |
+| `GET` | `/admin/staff/create` | `staff.create` |
+| `POST` | `/admin/staff` | `staff.store` |
+| `GET` | `/admin/staff/{staff}/edit` | `staff.edit` |
+| `PUT`/`PATCH` | `/admin/staff/{staff}` | `staff.update` |
+| `DELETE` | `/admin/staff/{staff}` | `staff.destroy` |
+
+#### Módulo ciclos académicos (`middleware: academic-cycles.module`)
+
+Prefijo: **`/admin/academic-cycles`**. Nombres de ruta con prefijo `academic-cycles.`.
+
+**Vista general de turnos (índice del módulo)**
+
+| Método | URI | Nombre |
+|--------|-----|--------|
+| `GET` | `/admin/academic-cycles` | `academic-cycles.index` |
+
+**Ciclos** — recurso `cycles` (parámetro de ruta: `{academic_cycle}`)
+
+| Método | URI | Nombre |
+|--------|-----|--------|
+| `GET` | `/admin/academic-cycles/cycles` | `academic-cycles.cycles.index` |
+| `GET` | `/admin/academic-cycles/cycles/create` | `academic-cycles.cycles.create` |
+| `POST` | `/admin/academic-cycles/cycles` | `academic-cycles.cycles.store` |
+| `GET` | `/admin/academic-cycles/cycles/{academic_cycle}/edit` | `academic-cycles.cycles.edit` |
+| `PUT`/`PATCH` | `/admin/academic-cycles/cycles/{academic_cycle}` | `academic-cycles.cycles.update` |
+| `DELETE` | `/admin/academic-cycles/cycles/{academic_cycle}` | `academic-cycles.cycles.destroy` |
+
+**Sedes (campuses)** — `{campus}`
+
+| Método | URI | Nombre |
+|--------|-----|--------|
+| `GET` | `/admin/academic-cycles/campuses` | `academic-cycles.campuses.index` |
+| `GET` | `/admin/academic-cycles/campuses/create` | `academic-cycles.campuses.create` |
+| `POST` | `/admin/academic-cycles/campuses` | `academic-cycles.campuses.store` |
+| `GET` | `/admin/academic-cycles/campuses/{campus}/edit` | `academic-cycles.campuses.edit` |
+| `PUT`/`PATCH` | `/admin/academic-cycles/campuses/{campus}` | `academic-cycles.campuses.update` |
+| `DELETE` | `/admin/academic-cycles/campuses/{campus}` | `academic-cycles.campuses.destroy` |
+
+**Turnos (shifts)** — `{shift}`
+
+| Método | URI | Nombre |
+|--------|-----|--------|
+| `GET` | `/admin/academic-cycles/shifts` | `academic-cycles.shifts.index` |
+| `GET` | `/admin/academic-cycles/shifts/create` | `academic-cycles.shifts.create` |
+| `POST` | `/admin/academic-cycles/shifts` | `academic-cycles.shifts.store` |
+| `GET` | `/admin/academic-cycles/shifts/{shift}/edit` | `academic-cycles.shifts.edit` |
+| `PUT`/`PATCH` | `/admin/academic-cycles/shifts/{shift}` | `academic-cycles.shifts.update` |
+| `DELETE` | `/admin/academic-cycles/shifts/{shift}` | `academic-cycles.shifts.destroy` |
+
+**Cronogramas / combinaciones ciclo–sede–turno (`schedules`)** — modelo enlazado como `{schedule}` (`AcademicCycleShift`). Sin `index` ni `show`; solo alta/edición/baja.
+
+| Método | URI | Nombre |
+|--------|-----|--------|
+| `GET` | `/admin/academic-cycles/schedules/create` | `academic-cycles.schedules.create` |
+| `POST` | `/admin/academic-cycles/schedules` | `academic-cycles.schedules.store` |
+| `GET` | `/admin/academic-cycles/schedules/{schedule}/edit` | `academic-cycles.schedules.edit` |
+| `PUT`/`PATCH` | `/admin/academic-cycles/schedules/{schedule}` | `academic-cycles.schedules.update` |
+| `DELETE` | `/admin/academic-cycles/schedules/{schedule}` | `academic-cycles.schedules.destroy` |
+
+#### Módulo alumnos (`middleware: students.module`)
+
+| Método | URI | Nombre |
+|--------|-----|--------|
+| `GET` | `/admin/students` | `students.index` |
+| `GET` | `/admin/students/create` | `students.create` |
+| `POST` | `/admin/students` | `students.store` |
+| `GET` | `/admin/students/{student}/edit` | `students.edit` |
+| `PUT`/`PATCH` | `/admin/students/{student}` | `students.update` |
+| `DELETE` | `/admin/students/{student}` | `students.destroy` |
+
+Los middlewares `staff.module`, `academic-cycles.module` y `students.module` restringen el acceso según la lógica de la aplicación (roles/permisos del staff).
+
+---
+
+## Otras rutas del framework
+
+| Método | URI | Notas |
+|--------|-----|--------|
+| `GET` | `/up` | Comprobación de salud (health check) de Laravel. |
+| `GET`/`PUT` | `/storage/{path}` | Archivos públicos almacenados (enlace simbólico `storage`). |
+
+---
+
+## Referencia rápida: generar URLs en Blade / PHP
+
+```php
+route('home');
+route('registration.start');
+route('registration.step.show', ['step' => 2]);
+route('login');
+route('dashboard');
+route('students.index');
+```
+
+Listado completo en consola:
+
+```bash
+php artisan route:list
+```
+
+---
+
+## Licencia
+
+Proyecto sobre Laravel; el framework Laravel se distribuye bajo la [licencia MIT](https://opensource.org/licenses/MIT).

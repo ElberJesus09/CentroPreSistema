@@ -3,37 +3,65 @@
 namespace App\Services;
 
 use App\Models\AcademicCycleShift;
+use App\Models\Campus;
 use App\Models\Career;
 use App\Models\Guardian;
 use App\Models\School;
 use App\Models\Student;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class StudentService
 {
-    /** Turnos con cupo y activos (formulario publico). */
+    /** Cache catalogos publicos (segundos). */
+    private const int CACHE_CATALOG_LONG = 600;
+
+    /** Turnos publicos: TTL corto para reflejar cupos sin saturar DB. */
+    private const int CACHE_PUBLIC_SCHEDULES = 45;
+
+    /** Turnos con cupo y activos (consulta directa, sin cache). */
     public function availableSchedulesWithRelations(): Collection
     {
-        return AcademicCycleShift::query()
-            ->where('status', true)
-            ->whereColumn('enrolled', '<', 'capacity')
-            ->with(['academicCycle', 'campus', 'shift'])
-            ->orderByDesc('academic_cycle_id')
-            ->orderBy('campus_id')
-            ->orderBy('shift_id')
-            ->get();
+        return $this->queryPublicAvailableSchedules();
     }
 
-    /** Carreras activas para selects. */
+    /** Turnos publicos con cache breve. */
+    public function cachedPublicAvailableSchedules(): Collection
+    {
+        return $this->rememberEloquentCollection(
+            'students.catalog.schedules.public.v1',
+            self::CACHE_PUBLIC_SCHEDULES,
+            fn (): Collection => $this->queryPublicAvailableSchedules(),
+        );
+    }
+
+    /** Carreras activas con cache. */
+    public function cachedActiveCareers(): Collection
+    {
+        return $this->rememberEloquentCollection(
+            'students.catalog.careers.active.v1',
+            self::CACHE_CATALOG_LONG,
+            fn (): Collection => $this->queryActiveCareers(),
+        );
+    }
+
+    /** Sedes activas con cache. */
+    public function cachedActiveCampuses(): Collection
+    {
+        return $this->rememberEloquentCollection(
+            'students.catalog.campuses.active.v1',
+            self::CACHE_CATALOG_LONG,
+            fn (): Collection => $this->queryActiveCampuses(),
+        );
+    }
+
+    /** Carreras activas para selects (alias hacia cache). */
     public function activeCareers(): Collection
     {
-        return Career::query()
-            ->where('status', true)
-            ->orderBy('name')
-            ->get();
+        return $this->cachedActiveCareers();
     }
 
     /** Listado administrativo con relaciones. */
@@ -85,7 +113,9 @@ class StudentService
      */
     public function registerStudent(array $validated): Student
     {
-        return DB::transaction(function () use ($validated) {
+        $validated = $this->sanitizeRegistrationPayload($validated);
+
+        $student = DB::transaction(function () use ($validated) {
             $scheduleId = (int) $validated['academic_cycle_shift_id'];
             $schedule = AcademicCycleShift::query()->lockForUpdate()->findOrFail($scheduleId);
             $this->assertScheduleAcceptsEnrollment($schedule);
@@ -109,6 +139,10 @@ class StudentService
 
             return $student->fresh()->load(['guardian', 'school', 'career', 'schedule.academicCycle', 'schedule.campus', 'schedule.shift']);
         });
+
+        $this->forgetPublicScheduleCatalogCache();
+
+        return $student;
     }
 
     /**
@@ -116,7 +150,9 @@ class StudentService
      */
     public function updateStudent(Student $student, array $validated): Student
     {
-        return DB::transaction(function () use ($student, $validated) {
+        $validated = $this->sanitizeRegistrationPayload($validated);
+
+        $student = DB::transaction(function () use ($student, $validated) {
             $student->load(['guardian', 'school']);
             $newScheduleId = (int) $validated['academic_cycle_shift_id'];
 
@@ -148,6 +184,10 @@ class StudentService
 
             return $student->fresh()->load(['guardian', 'school', 'career', 'schedule.academicCycle', 'schedule.campus', 'schedule.shift']);
         });
+
+        $this->forgetPublicScheduleCatalogCache();
+
+        return $student;
     }
 
     /** Elimina alumno, libera cupo y limpia apoderado/colegio asociados. */
@@ -164,6 +204,8 @@ class StudentService
             Guardian::query()->whereKey($guardianId)->delete();
             School::query()->whereKey($schoolId)->delete();
         });
+
+        $this->forgetPublicScheduleCatalogCache();
     }
 
     /** Verifica turno activo y con cupo antes de incrementar. */
@@ -180,5 +222,109 @@ class StudentService
                 'academic_cycle_shift_id' => ['No hay vacantes disponibles en el turno seleccionado.'],
             ]);
         }
+    }
+
+    /**
+     * @return Collection<int, AcademicCycleShift>
+     */
+    private function queryPublicAvailableSchedules(): Collection
+    {
+        return AcademicCycleShift::query()
+            ->where('status', true)
+            ->whereColumn('enrolled', '<', 'capacity')
+            ->with(['academicCycle', 'campus', 'shift'])
+            ->orderByDesc('academic_cycle_id')
+            ->orderBy('campus_id')
+            ->orderBy('shift_id')
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, Career>
+     */
+    private function queryActiveCareers(): Collection
+    {
+        return Career::query()
+            ->where('status', true)
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, Campus>
+     */
+    private function queryActiveCampuses(): Collection
+    {
+        return Campus::query()
+            ->where('status', true)
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Sanitiza strings anidados (XSS / ruido) antes de persistir.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function sanitizeRegistrationPayload(array $validated): array
+    {
+        foreach (['student', 'guardian', 'school'] as $section) {
+            if (! isset($validated[$section]) || ! is_array($validated[$section])) {
+                continue;
+            }
+            foreach ($validated[$section] as $key => $value) {
+                if (! is_string($value)) {
+                    continue;
+                }
+                $max = match (true) {
+                    $section === 'student' && $key === 'email' => 255,
+                    $section === 'school' && $key === 'name' => 255,
+                    default => 500,
+                };
+                $validated[$section][$key] = $this->sanitizePlainString($value, $max);
+            }
+        }
+
+        if (isset($validated['student']['email']) && is_string($validated['student']['email'])) {
+            $validated['student']['email'] = mb_strtolower(trim($validated['student']['email']));
+        }
+
+        return $validated;
+    }
+
+    private function sanitizePlainString(string $value, int $max): string
+    {
+        return mb_substr(trim(strip_tags($value)), 0, $max);
+    }
+
+    /** Invalida cache de turnos publicos tras cambios de cupos. */
+    private function forgetPublicScheduleCatalogCache(): void
+    {
+        Cache::forget('students.catalog.schedules.public.v1');
+    }
+
+    /**
+     * Cache de colecciones Eloquent: si el valor deserializado no es una Collection
+     * (p. ej. __PHP_Incomplete_Class tras cambios de clases), se invalida y se recalcula.
+     *
+     * @param  callable(): Collection  $callback
+     */
+    private function rememberEloquentCollection(string $key, int $ttl, callable $callback): Collection
+    {
+        $cached = Cache::get($key);
+
+        if ($cached instanceof Collection) {
+            return $cached;
+        }
+
+        if ($cached !== null) {
+            Cache::forget($key);
+        }
+
+        $fresh = $callback();
+        Cache::put($key, $fresh, $ttl);
+
+        return $fresh;
     }
 }

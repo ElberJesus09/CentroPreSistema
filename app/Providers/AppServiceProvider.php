@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Models\AcademicCycleShift;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,5 +26,23 @@ class AppServiceProvider extends ServiceProvider
     {
         // Parametro {schedule} en rutas del modulo academic cycles.
         Route::bind('schedule', fn (string $value) => AcademicCycleShift::query()->whereKey($value)->firstOrFail());
+
+        $this->configureRegistrationRateLimiters();
+    }
+
+    /** Limites para portal publico y login administrativo. */
+    private function configureRegistrationRateLimiters(): void
+    {
+        RateLimiter::for('public-registration', function (Request $request) {
+            return Limit::perMinute(20)->by($request->ip());
+        });
+
+        RateLimiter::for('public-registration-finish', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
+        RateLimiter::for('admin-login', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
     }
 }

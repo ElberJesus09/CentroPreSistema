@@ -27,6 +27,12 @@ class LoginController extends Controller
                 ->onlyInput('username');
         }
 
+        if (! $staff->canAccessStudentsModule() && ! $staff->canAccessStaffModule() && ! $staff->canAccessAcademicCyclesModule()) {
+            return back()
+                ->withErrors(['username' => 'Su usuario no tiene acceso al panel administrativo.'])
+                ->onlyInput('username');
+        }
+
         Auth::login($staff, $request->boolean('remember'));
         $request->session()->regenerate();
         $staffService->recordLogin($staff);

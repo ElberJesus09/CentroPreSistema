@@ -1,7 +1,13 @@
 <?php
 
-test('the home route redirects guests to login', function () {
+test('home page is reachable for guests', function () {
     $response = $this->get('/');
 
-    $response->assertRedirect(route('login'));
+    $response->assertOk();
+});
+
+test('admin login page is reachable for guests', function () {
+    $response = $this->get('/admin/login');
+
+    $response->assertOk();
 });

@@ -8,27 +8,31 @@ use App\Models\Student;
 
 class StudentPolicy
 {
+    /** trabajador, admin y super_admin listan expedientes. */
     public function viewAny(Staff $user): bool
     {
         return $this->staffWithStudentAccess($user);
     }
 
+    /** Lectura de detalle alineada al modulo alumnos. */
     public function view(Staff $user, Student $student): bool
     {
         return $this->staffWithStudentAccess($user);
     }
 
+    /** Alta permitida a personal operativo y administradores. */
     public function create(Staff $user): bool
     {
         return $this->staffWithStudentAccess($user);
     }
 
+    /** Edicion permitida al mismo conjunto de roles. */
     public function update(Staff $user, Student $student): bool
     {
         return $this->staffWithStudentAccess($user);
     }
 
-    /** trabajador no elimina; admin y super_admin si. */
+    /** trabajador: sin baja; admin y super_admin eliminan y liberan cupo. */
     public function delete(Staff $user, Student $student): bool
     {
         $name = $user->role?->name;
