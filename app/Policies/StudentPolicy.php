@@ -38,6 +38,12 @@ class StudentPolicy
         return $this->update($user, $student);
     }
 
+    /** Descarga PDFs de inscripcion sin enviar correo (mismos roles que edicion). */
+    public function downloadRegistrationDocuments(Staff $user, Student $student): bool
+    {
+        return $this->update($user, $student);
+    }
+
     /** trabajador: sin baja; admin y super_admin eliminan y liberan cupo. */
     public function delete(Staff $user, Student $student): bool
     {

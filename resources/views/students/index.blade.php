@@ -61,7 +61,15 @@
                     <td
                         class="sticky right-0 whitespace-nowrap bg-white px-4 py-3 text-right shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.08)]"
                     >
-        @can('resendRegistrationMail', $row)
+                        @can('downloadRegistrationDocuments', $row)
+                            <a
+                                href="{{ route('students.registration-documents.download', $row) }}"
+                                class="mr-2 text-sm font-medium text-neutral-700 hover:underline"
+                            >
+                                Descargar PDFs
+                            </a>
+                        @endcan
+                        @can('resendRegistrationMail', $row)
                             <form method="post" action="{{ route('students.registration-mail.resend', $row) }}" class="mr-2 inline">
                                 @csrf
                                 <button type="submit" class="text-sm font-medium text-neutral-700 hover:underline">

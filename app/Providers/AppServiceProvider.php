@@ -51,5 +51,12 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(8)->by((string) $key);
         });
+
+        RateLimiter::for('admin-student-documents-download', function (Request $request) {
+            $user = $request->user();
+            $key = $user?->getAuthIdentifier() ?? $request->ip();
+
+            return Limit::perMinute(20)->by((string) $key);
+        });
     }
 }

@@ -7,10 +7,12 @@ use App\Http\Requests\Student\UpdateStudentRequest;
 use App\Models\Career;
 use App\Models\Student;
 use App\Services\StudentMailService;
+use App\Services\StudentPdfService;
 use App\Services\StudentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class StudentController extends Controller
 {
@@ -79,5 +81,15 @@ class StudentController extends Controller
         }
 
         return redirect()->route('students.index')->with('warning', $outcome->userMessage ?? 'No se pudo reenviar el correo.');
+    }
+
+    /** PDFs institucionales (ZIP) sin enviar correo. */
+    public function downloadRegistrationDocuments(Student $student, StudentPdfService $studentPdfService): BinaryFileResponse
+    {
+        $this->authorize('downloadRegistrationDocuments', $student);
+
+        $pack = $studentPdfService->createRegistrationDocumentsZip($student);
+
+        return response()->download($pack['path'], $pack['download_name'])->deleteFileAfterSend(true);
     }
 }

@@ -82,6 +82,9 @@ Route::prefix('admin')->group(function (): void {
             Route::post('students/{student}/registration-mail/resend', [StudentController::class, 'resendRegistrationMail'])
                 ->middleware('throttle:admin-student-mail-resend')
                 ->name('students.registration-mail.resend');
+            Route::get('students/{student}/registration-documents/download', [StudentController::class, 'downloadRegistrationDocuments'])
+                ->middleware('throttle:admin-student-documents-download')
+                ->name('students.registration-documents.download');
             Route::resource('students', StudentController::class)->except(['show']);
         });
     });
