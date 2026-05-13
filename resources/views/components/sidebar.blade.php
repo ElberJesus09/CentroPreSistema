@@ -43,6 +43,18 @@
                 Academic Cycles
             </a>
         @endcan
+        @can('viewAny', \App\Models\ExamSetting::class)
+            <a
+                href="{{ route('exam-settings.edit') }}"
+                @class([
+                    'rounded-md px-3 py-2 font-medium transition-colors',
+                    'bg-white/15 text-white' => str_starts_with((string) $current, 'exam-settings.'),
+                    'text-white/85 hover:bg-white/10 hover:text-white' => ! str_starts_with((string) $current, 'exam-settings.'),
+                ])
+            >
+                Exam settings
+            </a>
+        @endcan
         @can('viewAny', \App\Models\Student::class)
             <a
                 href="{{ route('students.index') }}"

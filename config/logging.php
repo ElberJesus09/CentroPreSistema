@@ -127,6 +127,15 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        /** Auditoria basica de correos de inscripcion (SMTP / reenvios). */
+        'student_mail' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/student-mail.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];

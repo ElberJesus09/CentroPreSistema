@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\CampusController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExamSettingsController;
 use App\Http\Controllers\Public\CampusCatalogController;
 use App\Http\Controllers\Public\CareerCatalogController;
 use App\Http\Controllers\Public\PublicHomeController;
@@ -44,6 +45,9 @@ Route::post('/registration/finish', [RegistrationWizardController::class, 'finis
     ->middleware('throttle:public-registration-finish')
     ->name('registration.finish');
 
+Route::get('/registration/complete', [RegistrationWizardController::class, 'complete'])
+    ->name('registration.complete');
+
 /*
 |--------------------------------------------------------------------------
 | Panel administrativo (/admin)
@@ -73,6 +77,11 @@ Route::prefix('admin')->group(function (): void {
         });
 
         Route::middleware('students.module')->group(function (): void {
+            Route::get('exam-settings/edit', [ExamSettingsController::class, 'edit'])->name('exam-settings.edit');
+            Route::put('exam-settings', [ExamSettingsController::class, 'update'])->name('exam-settings.update');
+            Route::post('students/{student}/registration-mail/resend', [StudentController::class, 'resendRegistrationMail'])
+                ->middleware('throttle:admin-student-mail-resend')
+                ->name('students.registration-mail.resend');
             Route::resource('students', StudentController::class)->except(['show']);
         });
     });

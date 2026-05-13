@@ -32,6 +32,12 @@ class StudentPolicy
         return $this->staffWithStudentAccess($user);
     }
 
+    /** Reenvio de correo de confirmacion (mismos roles que edicion). */
+    public function resendRegistrationMail(Staff $user, Student $student): bool
+    {
+        return $this->update($user, $student);
+    }
+
     /** trabajador: sin baja; admin y super_admin eliminan y liberan cupo. */
     public function delete(Staff $user, Student $student): bool
     {

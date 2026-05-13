@@ -10,6 +10,8 @@ use App\Http\Requests\PublicRegistration\RegistrationStep3Request;
 use App\Http\Requests\PublicRegistration\RegistrationStep4Request;
 use App\Models\AcademicCycleShift;
 use App\Models\Career;
+use App\Models\ExamSetting;
+use App\Services\PublicRegistrationCompletionService;
 use App\Services\StudentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -113,14 +115,35 @@ class RegistrationWizardController extends Controller
         return redirect()->route('registration.step.show', ['step' => 5]);
     }
 
-    /** Persistencia final delegada al servicio. */
-    public function finish(FinalizePublicRegistrationRequest $request, StudentService $studentService): RedirectResponse
-    {
-        $studentService->registerStudent($request->validated());
+    /** Persistencia final: registro + documentos + correo (delegado a servicios). */
+    public function finish(
+        FinalizePublicRegistrationRequest $request,
+        PublicRegistrationCompletionService $completionService,
+    ): RedirectResponse {
+        $result = $completionService->finalize($request->validated());
         $request->session()->forget(self::SESSION_KEY);
 
-        return redirect()->route('registration.step.show', ['step' => 1])
-            ->with('success', 'Su postulacion fue registrada correctamente. Nos pondremos en contacto.');
+        $flash = [
+            'student_name' => $result->student->fullName(),
+            'mail_sent' => $result->mailOutcome->sent,
+            'mail_message' => $result->mailOutcome->userMessage,
+        ];
+
+        return redirect()->route('registration.complete')->with('registration_complete', $flash);
+    }
+
+    /** Pantalla de confirmacion tras inscripcion exitosa. */
+    public function complete(Request $request): View|RedirectResponse
+    {
+        $payload = $request->session()->pull('registration_complete');
+        if (! is_array($payload)) {
+            return redirect()->route('registration.start');
+        }
+
+        return view('public.registration.complete', [
+            'summary' => $payload,
+            'exam' => ExamSetting::singleton(),
+        ]);
     }
 
     /**

@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class ExamSetting extends Model
+{
+    /** @var list<string> */
+    protected $fillable = [
+        'exam_date',
+        'exam_time',
+        'exam_location',
+        'institutional_message',
+    ];
+
+    /** Fila unica editable desde administracion. */
+    public static function singleton(): self
+    {
+        /** @var self $row */
+        $row = static::query()->firstOrCreate(
+            ['id' => 1],
+            [
+                'exam_date' => null,
+                'exam_time' => null,
+                'exam_location' => null,
+                'institutional_message' => null,
+            ],
+        );
+
+        return $row;
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'exam_date' => 'date',
+        ];
+    }
+}

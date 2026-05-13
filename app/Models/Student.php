@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'first_name',
@@ -61,6 +62,14 @@ class Student extends Model
     public function schedule(): BelongsTo
     {
         return $this->belongsTo(AcademicCycleShift::class, 'academic_cycle_shift_id');
+    }
+
+    /**
+     * @return HasMany<StudentMailLog, $this>
+     */
+    public function mailLogs(): HasMany
+    {
+        return $this->hasMany(StudentMailLog::class);
     }
 
     /** Nombre completo para listados. */

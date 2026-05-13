@@ -6,8 +6,10 @@ use App\Http\Requests\Student\StoreStudentRequest;
 use App\Http\Requests\Student\UpdateStudentRequest;
 use App\Models\Career;
 use App\Models\Student;
+use App\Services\StudentMailService;
 use App\Services\StudentService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class StudentController extends Controller
@@ -60,5 +62,22 @@ class StudentController extends Controller
         $studentService->deleteStudent($student);
 
         return redirect()->route('students.index')->with('success', 'Alumno eliminado correctamente.');
+    }
+
+    public function resendRegistrationMail(Request $request, Student $student, StudentMailService $studentMailService): RedirectResponse
+    {
+        $this->authorize('resendRegistrationMail', $student);
+        $staff = $request->user();
+        if ($staff === null) {
+            abort(403);
+        }
+
+        $outcome = $studentMailService->sendManualResend($student, $staff);
+
+        if ($outcome->sent) {
+            return redirect()->route('students.index')->with('success', 'Correo de confirmación reenviado correctamente.');
+        }
+
+        return redirect()->route('students.index')->with('warning', $outcome->userMessage ?? 'No se pudo reenviar el correo.');
     }
 }
