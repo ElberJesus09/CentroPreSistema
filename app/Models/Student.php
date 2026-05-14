@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'school_id',
     'career_id',
     'academic_cycle_shift_id',
+    'admission_process_id',
     'status',
 ])]
 class Student extends Model
@@ -54,6 +55,14 @@ class Student extends Model
     public function career(): BelongsTo
     {
         return $this->belongsTo(Career::class);
+    }
+
+    /**
+     * @return BelongsTo<AdmissionProcess, $this>
+     */
+    public function admissionProcess(): BelongsTo
+    {
+        return $this->belongsTo(AdmissionProcess::class);
     }
 
     /**

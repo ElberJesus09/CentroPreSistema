@@ -9,12 +9,22 @@ class ShiftSeeder extends Seeder
 {
     public function run(): void
     {
-        $names = ['Morning', 'Afternoon', 'Evening'];
+        $map = [
+            'Morning' => 'Mañana',
+            'Afternoon' => 'Tarde',
+            'Evening' => 'Noche',
+        ];
 
-        foreach ($names as $name) {
+        foreach ($map as $legacy => $label) {
+            $row = Shift::query()->where('name', $legacy)->first();
+            if ($row !== null) {
+                $row->update(['name' => $label, 'status' => true]);
+
+                continue;
+            }
             Shift::query()->updateOrCreate(
-                ['name' => $name],
-                ['name' => $name, 'status' => true]
+                ['name' => $label],
+                ['name' => $label, 'status' => true]
             );
         }
     }

@@ -4,14 +4,14 @@
 
 @section('content')
     <div class="mb-6">
-        <a href="{{ route('students.index') }}" class="text-sm font-medium text-brand hover:underline">Volver al listado</a>
-        <h1 class="mt-2 text-xl font-semibold text-neutral-900">Registrar alumno</h1>
-        <p class="text-sm text-neutral-600">Mismo formulario que la postulacion publica; puede fijar estado del expediente.</p>
+        <a href="{{ route('students.index') }}" class="text-sm font-semibold text-primary hover:underline">Volver al listado</a>
+        <h1 class="font-display mt-2 text-xl font-bold text-primary md:text-2xl">Registrar alumno</h1>
+        <p class="text-sm text-on-surface-variant">Mismo formulario que la postulación pública; puede fijar el estado del expediente.</p>
     </div>
 
     @if ($schedules->isEmpty())
-        <div class="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            No hay turnos con cupos disponibles. Configure programacion en Academic Cycles antes de registrar alumnos.
+        <div class="mb-6 rounded-md border border-secondary-container/50 bg-secondary-container/15 px-4 py-3 text-sm text-on-secondary-container">
+            No hay turnos con cupos disponibles. Configure la programación en <strong>Ciclos académicos</strong> antes de registrar alumnos.
         </div>
     @endif
 

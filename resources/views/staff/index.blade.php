@@ -1,17 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Staff | '.config('app.name'))
+@section('title', 'Personal | '.config('app.name'))
 
 @section('content')
     <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-            <h1 class="text-xl font-semibold text-neutral-900">Empleados</h1>
-            <p class="text-sm text-neutral-600">Gestion de personal con roles y accesos.</p>
+            <h1 class="font-display text-xl font-bold text-primary md:text-2xl">Empleados</h1>
+            <p class="text-sm text-on-surface-variant">Gestión de personal con roles y accesos.</p>
         </div>
         @can('create', \App\Models\Staff::class)
             <a
                 href="{{ route('staff.create') }}"
-                class="inline-flex items-center justify-center rounded-md border border-transparent bg-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand/90 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
+                class="inline-flex items-center justify-center rounded-lg border border-transparent bg-primary px-4 py-2 text-sm font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
                 Nuevo empleado
             </a>

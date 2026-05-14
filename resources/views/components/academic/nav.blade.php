@@ -1,14 +1,14 @@
 @props(['section' => 'schedules'])
 
 @php
-    $base = 'rounded-md px-3 py-2 text-sm font-medium transition-colors';
-    $active = $base.' border border-brand bg-brand/5 text-brand';
-    $idle = $base.' border border-transparent text-neutral-600 hover:bg-neutral-100';
+    $base = 'rounded-lg px-3 py-2 text-sm font-semibold transition-colors';
+    $active = $base.' border border-primary bg-primary-fixed text-primary';
+    $idle = $base.' border border-transparent text-on-surface-variant hover:bg-surface-container-high';
 @endphp
 
-<nav class="mb-6 flex flex-wrap gap-2 border-b border-neutral-200 pb-4" aria-label="Modulo academic cycles">
+<nav class="mb-6 flex flex-wrap gap-2 border-b border-outline-variant pb-4" aria-label="Ciclos académicos">
     <a href="{{ route('academic-cycles.index') }}" class="{{ $section === 'schedules' ? $active : $idle }}">
-        Programacion
+        Programación
     </a>
     <a href="{{ route('academic-cycles.cycles.index') }}" class="{{ $section === 'cycles' ? $active : $idle }}">
         Ciclos

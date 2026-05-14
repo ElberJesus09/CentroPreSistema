@@ -42,7 +42,7 @@ class StudentService
     public function cachedActiveCareers(): Collection
     {
         return $this->rememberEloquentCollection(
-            'students.catalog.careers.active.v1',
+            'students.catalog.careers.active.v2',
             self::CACHE_CATALOG_LONG,
             fn (): Collection => $this->queryActiveCareers(),
         );

@@ -4,9 +4,9 @@
 
 @section('content')
     <div class="mb-6">
-        <a href="{{ route('students.index') }}" class="text-sm font-medium text-brand hover:underline">Volver al listado</a>
-        <h1 class="mt-2 text-xl font-semibold text-neutral-900">Editar alumno</h1>
-        <p class="text-sm text-neutral-600">DNI {{ $student->dni }} — al cambiar de turno se validan cupos automaticamente.</p>
+        <a href="{{ route('students.index') }}" class="text-sm font-semibold text-primary hover:underline">Volver al listado</a>
+        <h1 class="font-display mt-2 text-xl font-bold text-primary md:text-2xl">Editar alumno</h1>
+        <p class="text-sm text-on-surface-variant">DNI {{ $student->dni }} — al cambiar de turno se validan cupos automáticamente.</p>
     </div>
 
     @include('students.partials.registration-form', [

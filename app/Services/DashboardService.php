@@ -3,9 +3,12 @@
 namespace App\Services;
 
 use App\Models\AcademicCycleShift;
+use App\Models\AdmissionProcess;
 use App\Models\Career;
 use App\Models\Staff;
 use App\Models\Student;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class DashboardService
@@ -13,16 +16,9 @@ class DashboardService
     /**
      * Datos listos para Chart.js y KPIs según permisos del usuario.
      *
-     * @return array{
-     *   kpis?: array<string, int|float>,
-     *   student_status?: array{labels: list<string>, values: list<int>},
-     *   careers?: array{labels: list<string>, values: list<int>},
-     *   registrations?: array{labels: list<string>, values: list<int>},
-     *   occupancy?: array{labels: list<string>, values: list<int>},
-     *   campus_load?: array{labels: list<string>, enrolled: list<int>, available: list<int>}
-     * }
+     * @return array<string, mixed>
      */
-    public function chartData(?Staff $user): array
+    public function chartData(?Staff $user, ?int $year = null, ?int $careerId = null): array
     {
         if ($user === null) {
             return [];
@@ -31,18 +27,23 @@ class DashboardService
         $out = [];
 
         if ($user->canAccessStudentsModule()) {
-            $out['kpis'] = $this->studentKpis();
-            $out['student_status'] = $this->studentsByStatusChart();
-            $out['careers'] = $this->studentsByCareerChart();
-            $out['registrations'] = $this->registrationsLastSixMonthsChart();
+            $base = $this->filteredStudentQuery($year, $careerId);
+
+            $out['kpis'] = $this->studentKpis($base);
+            $out['student_status'] = $this->studentsByStatusChart($base);
+            $out['careers'] = $this->studentsByCareerChart($base);
+            $out['registrations'] = $this->registrationsChart($base, $year);
         }
 
         if ($user->canAccessAcademicCyclesModule()) {
             $occupancy = $this->globalOccupancyDonut();
+
             if ($occupancy !== null) {
                 $out['occupancy'] = $occupancy;
             }
+
             $campus = $this->campusLoadChart();
+
             if ($campus !== null) {
                 $out['campus_load'] = $campus;
             }
@@ -51,23 +52,82 @@ class DashboardService
         return $out;
     }
 
-    /** KPIs rápidos del módulo alumnos. */
-    private function studentKpis(): array
+    /** @return Collection<int, int> */
+    public function filterYearOptions(): Collection
     {
-        $base = Student::query();
+        $fromStudents = Student::query()
+            ->selectRaw("strftime('%Y', registration_date) as y")
+            ->whereNotNull('registration_date')
+            ->distinct()
+            ->pluck('y');
 
+        $fromProcesses = AdmissionProcess::query()
+            ->selectRaw("strftime('%Y', start_date) as y")
+            ->whereNotNull('start_date')
+            ->distinct()
+            ->pluck('y');
+
+        return $fromStudents
+            ->merge($fromProcesses)
+            ->filter()
+            ->unique()
+            ->sortDesc()
+            ->values()
+            ->map(fn ($y) => (int) $y);
+    }
+
+    /** @return Collection<int, Career> */
+    public function filterCareerOptions(): Collection
+    {
+        return Career::query()
+            ->where('status', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
+    }
+
+    private function filteredStudentQuery(?int $year, ?int $careerId): Builder
+    {
+        $q = Student::query();
+
+        if ($year !== null) {
+            $q->whereRaw(
+                "strftime('%Y', registration_date) = ?",
+                [(string) $year]
+            );
+        }
+
+        if ($careerId !== null) {
+            $q->where('career_id', $careerId);
+        }
+
+        return $q;
+    }
+
+    /**
+     * @return array<string, int|float>
+     */
+    private function studentKpis(Builder $base): array
+    {
         return [
             'students_total' => (int) (clone $base)->count(),
-            'students_pending' => (int) (clone $base)->where('status', Student::STATUS_PENDING)->count(),
-            'students_active' => (int) (clone $base)->where('status', Student::STATUS_ACTIVE)->count(),
-            'students_rejected' => (int) (clone $base)->where('status', Student::STATUS_REJECTED)->count(),
+            'students_pending' => (int) (clone $base)
+                ->where('status', Student::STATUS_PENDING)
+                ->count(),
+
+            'students_active' => (int) (clone $base)
+                ->where('status', Student::STATUS_ACTIVE)
+                ->count(),
+
+            'students_rejected' => (int) (clone $base)
+                ->where('status', Student::STATUS_REJECTED)
+                ->count(),
         ];
     }
 
     /**
      * @return array{labels: list<string>, values: list<int>}
      */
-    private function studentsByStatusChart(): array
+    private function studentsByStatusChart(Builder $base): array
     {
         $labels = [
             Student::STATUS_PENDING => 'Pendiente',
@@ -75,7 +135,7 @@ class DashboardService
             Student::STATUS_REJECTED => 'Rechazado',
         ];
 
-        $counts = Student::query()
+        $counts = (clone $base)
             ->select('status', DB::raw('count(*) as c'))
             ->groupBy('status')
             ->pluck('c', 'status')
@@ -83,6 +143,7 @@ class DashboardService
 
         $orderedLabels = [];
         $orderedValues = [];
+
         foreach ($labels as $key => $label) {
             $orderedLabels[] = $label;
             $orderedValues[] = (int) ($counts[$key] ?? 0);
@@ -97,56 +158,142 @@ class DashboardService
     /**
      * @return array{labels: list<string>, values: list<int>}
      */
-    private function studentsByCareerChart(): array
+    private function studentsByCareerChart(Builder $base): array
     {
-        $rows = Career::query()
-            ->withCount('students')
-            ->orderByDesc('students_count')
+        $rows = (clone $base)
+            ->select('career_id', DB::raw('count(*) as c'))
+            ->groupBy('career_id')
+            ->orderByDesc('c')
             ->limit(8)
-            ->get(['name', 'students_count']);
+            ->get();
 
         if ($rows->isEmpty()) {
-            return ['labels' => ['Sin carreras registradas'], 'values' => [0]];
+            return [
+                'labels' => ['Sin carreras registradas'],
+                'values' => [0],
+            ];
         }
+
+        $names = Career::query()
+            ->whereIn('id', $rows->pluck('career_id')->all())
+            ->pluck('name', 'id');
 
         $labels = [];
         $values = [];
+
         foreach ($rows as $row) {
-            $labels[] = (string) $row->name;
-            $values[] = (int) $row->students_count;
+            $labels[] = (string) ($names[$row->career_id] ?? '—');
+            $values[] = (int) $row->c;
         }
 
-        return ['labels' => $labels, 'values' => $values];
+        return [
+            'labels' => $labels,
+            'values' => $values,
+        ];
     }
 
     /**
-     * Inscripciones por mes (últimos 6 meses, incluye mes actual).
+     * Inscripciones por mes.
      *
      * @return array{labels: list<string>, values: list<int>}
      */
-    private function registrationsLastSixMonthsChart(): array
+    private function registrationsChart(Builder $base, ?int $year): array
     {
+        if ($year !== null) {
+            $keys = [];
+            $labels = [];
+
+            $monthShort = [
+                'ene',
+                'feb',
+                'mar',
+                'abr',
+                'may',
+                'jun',
+                'jul',
+                'ago',
+                'sep',
+                'oct',
+                'nov',
+                'dic',
+            ];
+
+            for ($m = 1; $m <= 12; $m++) {
+                $keys[] = sprintf('%04d-%02d', $year, $m);
+                $labels[] = $monthShort[$m - 1].' '.$year;
+            }
+
+            $counts = array_fill_keys($keys, 0);
+
+            (clone $base)
+                ->whereRaw(
+                    "strftime('%Y', registration_date) = ?",
+                    [(string) $year]
+                )
+                ->select('registration_date')
+                ->orderBy('id')
+                ->chunk(2000, function ($chunk) use (&$counts): void {
+                    foreach ($chunk as $student) {
+                        $k = $student->registration_date?->format('Y-m');
+
+                        if ($k !== null && array_key_exists($k, $counts)) {
+                            $counts[$k]++;
+                        }
+                    }
+                });
+
+            $values = [];
+
+            foreach ($keys as $key) {
+                $values[] = $counts[$key];
+            }
+
+            return [
+                'labels' => $labels,
+                'values' => $values,
+            ];
+        }
+
         $start = now()->startOfMonth()->subMonths(5);
 
         $keys = [];
         $labels = [];
-        $monthShort = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+        $monthShort = [
+            'ene',
+            'feb',
+            'mar',
+            'abr',
+            'may',
+            'jun',
+            'jul',
+            'ago',
+            'sep',
+            'oct',
+            'nov',
+            'dic',
+        ];
+
         for ($i = 0; $i < 6; $i++) {
             $m = $start->copy()->addMonths($i);
+
             $key = $m->format('Y-m');
+
             $keys[] = $key;
-            $labels[] = $monthShort[(int) $m->format('n') - 1].' '.$m->format('Y');
+            $labels[] = $monthShort[(int) $m->format('n') - 1]
+                .' '.$m->format('Y');
         }
 
         $counts = array_fill_keys($keys, 0);
 
-        Student::query()
+        (clone $base)
             ->where('registration_date', '>=', $start->toDateString())
-            ->orderBy('id')
             ->select('registration_date')
-            ->chunk(1000, function ($chunk) use (&$counts): void {
+            ->orderBy('id')
+            ->chunk(2000, function ($chunk) use (&$counts): void {
                 foreach ($chunk as $student) {
                     $k = $student->registration_date?->format('Y-m');
+
                     if ($k !== null && array_key_exists($k, $counts)) {
                         $counts[$k]++;
                     }
@@ -154,6 +301,7 @@ class DashboardService
             });
 
         $values = [];
+
         foreach ($keys as $key) {
             $values[] = $counts[$key];
         }
@@ -165,19 +313,21 @@ class DashboardService
     }
 
     /**
-     * Cupos globales en programaciones activas (matriculados vs libres).
-     *
      * @return array{labels: list<string>, values: list<int>}|null
      */
     private function globalOccupancyDonut(): ?array
     {
-        $base = AcademicCycleShift::query()->where('status', true);
+        $base = AcademicCycleShift::query()
+            ->where('status', true);
+
         $capacity = (int) (clone $base)->sum('capacity');
+
         if ($capacity === 0) {
             return null;
         }
 
         $enrolled = (int) (clone $base)->sum('enrolled');
+
         $free = max(0, $capacity - $enrolled);
 
         return [
@@ -187,15 +337,22 @@ class DashboardService
     }
 
     /**
-     * Carga por sede (programaciones activas).
-     *
-     * @return array{labels: list<string>, enrolled: list<int>, available: list<int>}|null
+     * @return array{
+     *     labels: list<string>,
+     *     enrolled: list<int>,
+     *     available: list<int>
+     * }|null
      */
     private function campusLoadChart(): ?array
     {
         $rows = AcademicCycleShift::query()
             ->where('academic_cycle_shifts.status', true)
-            ->join('campuses', 'campuses.id', '=', 'academic_cycle_shifts.campus_id')
+            ->join(
+                'campuses',
+                'campuses.id',
+                '=',
+                'academic_cycle_shifts.campus_id'
+            )
             ->select(
                 'campuses.name',
                 DB::raw('SUM(academic_cycle_shifts.enrolled) as enrolled'),
@@ -215,8 +372,10 @@ class DashboardService
 
         foreach ($rows as $row) {
             $labels[] = (string) $row->name;
+
             $e = (int) $row->enrolled;
             $c = (int) $row->capacity;
+
             $enrolled[] = $e;
             $available[] = max(0, $c - $e);
         }
@@ -229,9 +388,7 @@ class DashboardService
     }
 
     /**
-     * Subconjunto enviado al cliente (Chart.js).
-     *
-     * @param  array<string, mixed>  $chartData
+     * @param array<string, mixed> $chartData
      * @return array<string, mixed>
      */
     public function chartPayloadForClient(array $chartData): array
@@ -249,7 +406,7 @@ class DashboardService
     }
 
     /**
-     * @param  array<string, mixed>  $chartPayload
+     * @param array<string, mixed> $chartPayload
      */
     public function hasRenderableCharts(array $chartPayload): bool
     {

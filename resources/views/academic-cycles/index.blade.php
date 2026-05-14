@@ -1,21 +1,21 @@
 @extends('layouts.app')
 
-@section('title', 'Academic Cycles | '.config('app.name'))
+@section('title', 'Ciclos académicos | '.config('app.name'))
 
 @section('content')
     <x-academic.nav section="schedules" />
 
     <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-            <h1 class="text-xl font-semibold text-neutral-900">Academic Cycles</h1>
-            <p class="text-sm text-neutral-600">Programacion de turnos por ciclo y sede (capacidad y matriculados).</p>
+            <h1 class="font-display text-xl font-bold text-primary md:text-2xl">Ciclos académicos</h1>
+            <p class="text-sm text-on-surface-variant">Programación de turnos por ciclo y sede (capacidad y matriculados).</p>
         </div>
         @can('create', \App\Models\AcademicCycleShift::class)
             <a
                 href="{{ route('academic-cycles.schedules.create') }}"
-                class="inline-flex items-center justify-center rounded-md border border-transparent bg-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand/90 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
+                class="inline-flex items-center justify-center rounded-lg border border-transparent bg-primary px-4 py-2 text-sm font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
-                Nueva programacion
+                Nueva programación
             </a>
         @endcan
     </div>
@@ -26,7 +26,7 @@
                 {{ $schedules->links() }}
             </x-slot:footer>
         @endif
-        <thead class="bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-600">
+        <thead class="bg-surface-container-high text-xs font-bold uppercase tracking-wide text-on-surface-variant">
             <tr>
                 <th class="px-4 py-3">ID</th>
                 <th class="px-4 py-3">Ciclo</th>
@@ -35,13 +35,13 @@
                 <th class="px-4 py-3">Capacidad</th>
                 <th class="px-4 py-3">Matriculados</th>
                 <th class="px-4 py-3">Estado</th>
-                <th class="sticky right-0 bg-neutral-50 px-4 py-3 text-right">Acciones</th>
+                <th class="sticky right-0 bg-surface-container-high px-4 py-3 text-right">Acciones</th>
             </tr>
         </thead>
-        <tbody class="divide-y divide-neutral-100 text-neutral-800">
+        <tbody class="divide-y divide-outline-variant/50 text-on-surface">
             @forelse ($schedules as $row)
-                <tr class="hover:bg-neutral-50/80">
-                    <td class="whitespace-nowrap px-4 py-3 text-neutral-600">{{ $row->id }}</td>
+                <tr class="hover:bg-surface-container-low/80">
+                    <td class="whitespace-nowrap px-4 py-3 text-on-surface-variant">{{ $row->id }}</td>
                     <td class="whitespace-nowrap px-4 py-3">{{ $row->academicCycle?->name }}</td>
                     <td class="whitespace-nowrap px-4 py-3">{{ $row->campus?->name }}</td>
                     <td class="whitespace-nowrap px-4 py-3">{{ $row->shift?->name }}</td>
@@ -55,12 +55,12 @@
                         @endif
                     </td>
                     <td
-                        class="sticky right-0 whitespace-nowrap bg-white px-4 py-3 text-right shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.08)]"
+                        class="sticky right-0 whitespace-nowrap bg-surface-container-lowest px-4 py-3 text-right shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.08)]"
                     >
                         @can('update', $row)
                             <a
                                 href="{{ route('academic-cycles.schedules.edit', $row) }}"
-                                class="mr-2 text-sm font-medium text-brand hover:underline"
+                                class="mr-2 text-sm font-semibold text-primary hover:underline"
                             >
                                 Editar
                             </a>
@@ -70,19 +70,19 @@
                                 method="post"
                                 action="{{ route('academic-cycles.schedules.destroy', $row) }}"
                                 class="inline"
-                                onsubmit="return confirm('Eliminar esta programacion?');"
+                                onsubmit="return confirm('¿Eliminar esta programación?');"
                             >
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-sm font-medium text-red-600 hover:underline">Eliminar</button>
+                                <button type="submit" class="text-sm font-semibold text-error hover:underline">Eliminar</button>
                             </form>
                         @endcan
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="px-4 py-8 text-center text-sm text-neutral-500">
-                        No hay programaciones. Cree ciclos, sedes y turnos, luego registre la programacion.
+                    <td colspan="8" class="px-4 py-8 text-center text-sm text-on-surface-variant">
+                        No hay programaciones. Cree ciclos, sedes y turnos, luego registre la programación.
                     </td>
                 </tr>
             @endforelse

@@ -5,28 +5,28 @@
 @php
     $method = strtolower($method ?? 'post');
 @endphp
-<form method="post" action="{{ $action }}" class="space-y-10 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm lg:p-8">
+<form method="post" action="{{ $action }}" class="space-y-10 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-sm lg:p-8">
     @csrf
     @if ($method === 'put')
         @method('PUT')
     @endif
 
     <section>
-        <h2 class="mb-4 border-b border-neutral-100 pb-2 text-sm font-semibold uppercase tracking-wide text-neutral-500">
+        <h2 class="mb-4 border-b border-outline-variant/50 pb-2 text-sm font-bold uppercase tracking-wide text-on-surface-variant">
             Datos personales
         </h2>
         <div class="grid gap-4 sm:grid-cols-2">
             <x-input label="Nombres" name="student[first_name]" :value="old('student.first_name', $student?->first_name ?? '')" />
             <x-input label="Apellido paterno" name="student[last_name]" :value="old('student.last_name', $student?->last_name ?? '')" />
             <x-input label="Apellido materno" name="student[mother_last_name]" :value="old('student.mother_last_name', $student?->mother_last_name ?? '')" />
-            <x-input label="DNI (8 digitos)" name="student[dni]" :value="old('student.dni', $student?->dni ?? '')" />
+            <x-input label="DNI (8 dígitos)" name="student[dni]" :value="old('student.dni', $student?->dni ?? '')" />
             <x-input label="Fecha de nacimiento" name="student[birth_date]" type="date" :value="old('student.birth_date', $student?->birth_date?->format('Y-m-d') ?? '')" />
             <div class="space-y-1">
-                <label for="student_gender" class="block text-sm font-medium text-neutral-800">Sexo</label>
+                <label for="student_gender" class="block text-sm font-semibold text-on-surface-variant">Género</label>
                 <select
                     id="student_gender"
                     name="student[gender]"
-                    class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                    class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2.5 text-sm text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 >
                     <option value="male" @selected(old('student.gender', $student?->gender ?? '') === 'male')>Masculino</option>
                     <option value="female" @selected(old('student.gender', $student?->gender ?? '') === 'female')>Femenino</option>
@@ -35,11 +35,11 @@
                     <p class="text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
-            <x-input label="Celular (9 digitos)" name="student[phone]" :value="old('student.phone', $student?->phone ?? '')" />
+            <x-input label="Celular (9 dígitos)" name="student[phone]" :value="old('student.phone', $student?->phone ?? '')" />
             <x-input label="Correo" name="student[email]" type="email" :value="old('student.email', $student?->email ?? '')" />
             <div class="space-y-1 sm:col-span-2">
                 <x-textarea
-                    label="Direccion"
+                    label="Dirección"
                     name="student[address]"
                     error-key="student.address"
                     rows="2"
@@ -50,23 +50,23 @@
     </section>
 
     <section>
-        <h2 class="mb-4 border-b border-neutral-100 pb-2 text-sm font-semibold uppercase tracking-wide text-neutral-500">
+        <h2 class="mb-4 border-b border-outline-variant/50 pb-2 text-sm font-bold uppercase tracking-wide text-on-surface-variant">
             Apoderado
         </h2>
         <div class="grid gap-4 sm:grid-cols-2">
             <x-input label="Nombres" name="guardian[first_name]" :value="old('guardian.first_name', $student?->guardian?->first_name ?? '')" />
             <x-input label="Apellido paterno" name="guardian[last_name]" :value="old('guardian.last_name', $student?->guardian?->last_name ?? '')" />
             <x-input label="Apellido materno" name="guardian[mother_last_name]" :value="old('guardian.mother_last_name', $student?->guardian?->mother_last_name ?? '')" />
-            <x-input label="DNI (8 digitos)" name="guardian[dni]" :value="old('guardian.dni', $student?->guardian?->dni ?? '')" />
-            <x-input label="Telefono (9 digitos)" name="guardian[phone]" :value="old('guardian.phone', $student?->guardian?->phone ?? '')" />
+            <x-input label="DNI (8 dígitos)" name="guardian[dni]" :value="old('guardian.dni', $student?->guardian?->dni ?? '')" />
+            <x-input label="Teléfono (9 dígitos)" name="guardian[phone]" :value="old('guardian.phone', $student?->guardian?->phone ?? '')" />
             <div class="space-y-1">
-                <label for="guardian_relationship" class="block text-sm font-medium text-neutral-800">Parentesco</label>
+                <label for="guardian_relationship" class="block text-sm font-semibold text-on-surface-variant">Parentesco</label>
                 <select
                     id="guardian_relationship"
                     name="guardian[relationship]"
-                    class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                    class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2.5 text-sm text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 >
-                    @foreach (['father' => 'Padre', 'mother' => 'Madre', 'uncle' => 'Tio', 'aunt' => 'Tia', 'guardian' => 'Apoderado'] as $value => $label)
+                    @foreach (['father' => 'Padre', 'mother' => 'Madre', 'uncle' => 'Tío', 'aunt' => 'Tía', 'guardian' => 'Apoderado'] as $value => $label)
                         <option value="{{ $value }}" @selected(old('guardian.relationship', $student?->guardian?->relationship ?? '') === $value)>
                             {{ $label }}
                         </option>
@@ -80,7 +80,7 @@
     </section>
 
     <section>
-        <h2 class="mb-4 border-b border-neutral-100 pb-2 text-sm font-semibold uppercase tracking-wide text-neutral-500">
+        <h2 class="mb-4 border-b border-outline-variant/50 pb-2 text-sm font-bold uppercase tracking-wide text-on-surface-variant">
             Colegio de procedencia
         </h2>
         <div class="grid gap-4 sm:grid-cols-2">
@@ -93,16 +93,16 @@
     </section>
 
     <section>
-        <h2 class="mb-4 border-b border-neutral-100 pb-2 text-sm font-semibold uppercase tracking-wide text-neutral-500">
-            Datos academicos
+        <h2 class="mb-4 border-b border-outline-variant/50 pb-2 text-sm font-bold uppercase tracking-wide text-on-surface-variant">
+            Datos académicos
         </h2>
         <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1 sm:col-span-2">
-                <label for="career_id" class="block text-sm font-medium text-neutral-800">Carrera postulante</label>
+                <label for="career_id" class="block text-sm font-semibold text-on-surface-variant">Carrera postulante</label>
                 <select
                     id="career_id"
                     name="career_id"
-                    class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                    class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2.5 text-sm text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 >
                     @foreach ($careers as $career)
                         <option value="{{ $career->id }}" @selected((string) old('career_id', $student?->career_id ?? '') === (string) $career->id)>
@@ -115,11 +115,11 @@
                 @enderror
             </div>
             <div class="space-y-1 sm:col-span-2">
-                <label for="academic_cycle_shift_id" class="block text-sm font-medium text-neutral-800">Ciclo, sede y turno</label>
+                <label for="academic_cycle_shift_id" class="block text-sm font-semibold text-on-surface-variant">Ciclo, sede y turno</label>
                 <select
                     id="academic_cycle_shift_id"
                     name="academic_cycle_shift_id"
-                    class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                    class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2.5 text-sm text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 >
                     @foreach ($schedules as $row)
                         @php
@@ -137,11 +137,11 @@
             </div>
             @if ($showStatusField)
                 <div class="space-y-1 sm:col-span-2">
-                    <label for="status" class="block text-sm font-medium text-neutral-800">Estado del expediente</label>
+                    <label for="status" class="block text-sm font-semibold text-on-surface-variant">Estado del expediente</label>
                     <select
                         id="status"
                         name="status"
-                        class="block w-full max-w-md rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 shadow-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                        class="block w-full max-w-md rounded-lg border border-outline-variant bg-white px-3 py-2.5 text-sm text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     >
                         <option value="{{ \App\Models\Student::STATUS_PENDING }}" @selected(old('status', $student?->status ?? \App\Models\Student::STATUS_PENDING) === \App\Models\Student::STATUS_PENDING)>
                             Pendiente
@@ -161,12 +161,12 @@
         </div>
     </section>
 
-    <div class="flex flex-wrap gap-3 border-t border-neutral-100 pt-6">
-        <x-button type="submit" variant="primary">{{ $submitLabel ?? 'Enviar postulacion' }}</x-button>
+    <div class="flex flex-wrap gap-3 border-t border-outline-variant/50 pt-6">
+        <x-button type="submit" variant="primary">{{ $submitLabel ?? 'Enviar postulación' }}</x-button>
         @isset($cancelUrl)
             <a
                 href="{{ $cancelUrl }}"
-                class="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-50"
+                class="inline-flex items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-sm font-semibold text-on-surface hover:bg-surface-container-high"
             >
                 Cancelar
             </a>
