@@ -10,7 +10,7 @@
                 Resumen operativo de postulantes y, si aplica, ocupación de cupos por sede.
             </p>
         </div>
-        @if ($filterYears->isNotEmpty() || $filterCareers->isNotEmpty())
+        @if ($filterYears->isNotEmpty() || $filterCareers->isNotEmpty() || $filterCycles->isNotEmpty())
             <form method="get" action="{{ route('dashboard') }}" class="flex flex-wrap items-end gap-3 rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-4 shadow-sm">
                 <div class="min-w-[10rem] flex-1">
                     <label for="dash-year" class="mb-1 block text-xs font-bold uppercase tracking-wide text-on-surface-variant">Año</label>
@@ -23,6 +23,22 @@
                         <option value="">Todos los años</option>
                         @foreach ($filterYears as $y)
                             <option value="{{ $y }}" @selected((int) ($filterYear ?? 0) === (int) $y)>{{ $y }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="min-w-[11rem] flex-1">
+                    <label for="dash-cycle" class="mb-1 block text-xs font-bold uppercase tracking-wide text-on-surface-variant">Ciclo</label>
+                    <select
+                        id="dash-cycle"
+                        name="academic_cycle_id"
+                        class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        onchange="this.form.submit()"
+                    >
+                        <option value="">Todos los ciclos</option>
+                        @foreach ($filterCycles as $cycle)
+                            <option value="{{ $cycle->id }}" @selected((int) ($filterAcademicCycleId ?? 0) === (int) $cycle->id)>
+                                {{ $cycle->name }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -42,7 +58,7 @@
                         @endforeach
                     </select>
                 </div>
-                @if ($filterYear !== null || $filterCareerId !== null)
+                @if ($filterYear !== null || $filterCareerId !== null || $filterAcademicCycleId !== null)
                     <a
                         href="{{ route('dashboard') }}"
                         class="inline-flex items-center justify-center rounded-lg border border-outline-variant px-3 py-2 text-sm font-semibold text-primary hover:bg-surface-container-high"

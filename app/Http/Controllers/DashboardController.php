@@ -14,13 +14,14 @@ class DashboardController extends Controller
         $user = auth()->user();
         $year = $this->optionalInt($request->query('year'));
         $careerId = $this->optionalInt($request->query('career_id'));
+        $academicCycleId = $this->optionalInt($request->query('academic_cycle_id'));
 
         $academicMetrics = null;
         if ($user?->canAccessAcademicCyclesModule()) {
-            $academicMetrics = $academicCycleService->dashboardAcademicMetrics($year);
+            $academicMetrics = $academicCycleService->dashboardAcademicMetrics($year, $academicCycleId);
         }
 
-        $chartData = $dashboardService->chartData($user, $year, $careerId);
+        $chartData = $dashboardService->chartData($user, $year, $careerId, $academicCycleId);
         $chartPayload = $dashboardService->chartPayloadForClient($chartData);
         $showCharts = $dashboardService->hasRenderableCharts($chartPayload);
 
@@ -35,8 +36,12 @@ class DashboardController extends Controller
             'filterCareers' => $user?->canAccessStudentsModule()
                 ? $dashboardService->filterCareerOptions()
                 : collect(),
+            'filterCycles' => $user?->canAccessStudentsModule() || $user?->canAccessAcademicCyclesModule()
+                ? $dashboardService->filterCycleOptions()
+                : collect(),
             'filterYear' => $year,
             'filterCareerId' => $careerId,
+            'filterAcademicCycleId' => $academicCycleId,
         ]);
     }
 

@@ -23,9 +23,13 @@ class AcademicCycleService
     }
 
     /** Metricas agregadas para dashboard (sin graficos). */
-    public function dashboardAcademicMetrics(?int $year = null): array
+    public function dashboardAcademicMetrics(?int $year = null, ?int $academicCycleId = null): array
     {
         $base = AcademicCycleShift::query()->where('status', true);
+
+        if ($academicCycleId !== null) {
+            $base->where('academic_cycle_id', $academicCycleId);
+        }
 
         if ($year !== null) {
             $base->whereHas('academicCycle', function (Builder $query) use ($year): void {

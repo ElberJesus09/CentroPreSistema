@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AcademicCycle;
 use App\Models\AcademicCycleShift;
+use App\Models\AdmissionProcess;
 use App\Models\Campus;
 use App\Models\Career;
 use App\Models\Guardian;
@@ -25,6 +26,9 @@ class StudentService
 
     /** Turnos publicos: TTL corto para reflejar cupos sin saturar DB. */
     private const int CACHE_PUBLIC_SCHEDULES = 45;
+
+    /** Cantidad inicial segura para listados administrativos. */
+    private const int ADMIN_INITIAL_LIMIT = 100;
 
     /** Turnos con cupo y activos (consulta directa, sin cache). */
     public function availableSchedulesWithRelations(): Collection
@@ -76,17 +80,54 @@ class StudentService
     public function paginateStudents(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         $query = Student::query()
-            ->with(['career', 'academicCycle', 'schedule.academicCycle', 'schedule.campus', 'schedule.shift'])
-            ->orderByDesc('id');
+            ->select([
+                'id',
+                'first_name',
+                'last_name',
+                'mother_last_name',
+                'dni',
+                'email',
+                'career_id',
+                'academic_cycle_id',
+                'academic_cycle_shift_id',
+                'admission_process_id',
+                'status',
+                'registration_date',
+            ])
+            ->with([
+                'career:id,name',
+                'academicCycle:id,name,start_date',
+                'schedule:id,academic_cycle_id,shift_id',
+                'schedule.academicCycle:id,name,start_date',
+                'schedule.shift:id,name',
+            ]);
 
         $search = trim((string) ($filters['search'] ?? ''));
         if ($search !== '') {
-            $query->where(function (Builder $q) use ($search): void {
+            $nameTerms = collect(preg_split('/\s+/', $search) ?: [])
+                ->map(fn (string $term): string => trim($term))
+                ->filter()
+                ->values();
+
+            $query->where(function (Builder $q) use ($search, $nameTerms): void {
                 $q->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('mother_last_name', 'like', "%{$search}%")
                     ->orWhere('dni', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere(function (Builder $names) use ($nameTerms): void {
+                        foreach ($nameTerms as $term) {
+                            $names->where(function (Builder $part) use ($term): void {
+                                $part->where('first_name', 'like', "%{$term}%")
+                                    ->orWhere('last_name', 'like', "%{$term}%")
+                                    ->orWhere('mother_last_name', 'like', "%{$term}%");
+                            });
+                        }
+                    })
+                    ->orWhereHas('career', fn (Builder $career) => $career->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('academicCycle', fn (Builder $cycle) => $cycle->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('schedule.academicCycle', fn (Builder $cycle) => $cycle->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('schedule.shift', fn (Builder $shift) => $shift->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -103,6 +144,18 @@ class StudentService
                 }
             });
         }
+
+        if ($search === '' && $year === null && $cycleId === null) {
+            $ids = $this->priorityStudentIds();
+
+            $ids->isEmpty()
+                ? $query->whereRaw('1 = 0')
+                : $query->whereKey($ids->all());
+        }
+
+        $query
+            ->orderByDesc('registration_date')
+            ->orderByDesc('id');
 
         return $query->paginate($perPage)->withQueryString();
     }
@@ -127,6 +180,75 @@ class StudentService
             ->orderByDesc('start_date')
             ->orderByDesc('id')
             ->get(['id', 'name', 'start_date']);
+    }
+
+    /** Alumno con relaciones para lectura administrativa. */
+    public function studentForAdminView(Student $student): Student
+    {
+        return $student->load([
+            'guardian',
+            'school',
+            'career',
+            'academicCycle',
+            'admissionProcess',
+            'schedule.academicCycle',
+            'schedule.campus',
+            'schedule.shift',
+        ]);
+    }
+
+    /**
+     * IDs recientes del proceso/ciclo prioritario para paginar solo 100 filas.
+     *
+     * @return SupportCollection<int, int>
+     */
+    private function priorityStudentIds(): SupportCollection
+    {
+        $query = Student::query();
+        $process = $this->priorityAdmissionProcess();
+
+        if ($process !== null) {
+            $query->where('admission_process_id', $process->id);
+        } else {
+            $cycle = AcademicCycle::query()
+                ->orderByDesc('start_date')
+                ->orderByDesc('id')
+                ->first(['id']);
+
+            if ($cycle === null) {
+                return collect();
+            }
+
+            $query->where('academic_cycle_id', $cycle->id);
+        }
+
+        return $query
+            ->orderByDesc('registration_date')
+            ->orderByDesc('id')
+            ->limit(self::ADMIN_INITIAL_LIMIT)
+            ->pluck('id');
+    }
+
+    private function priorityAdmissionProcess(): ?AdmissionProcess
+    {
+        $today = now()->toDateString();
+
+        $active = AdmissionProcess::query()
+            ->where('status', AdmissionProcess::STATUS_ACTIVO)
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->orderByDesc('start_date')
+            ->orderByDesc('id')
+            ->first(['id']);
+
+        if ($active !== null) {
+            return $active;
+        }
+
+        return AdmissionProcess::query()
+            ->orderByDesc('start_date')
+            ->orderByDesc('id')
+            ->first(['id']);
     }
 
     /**

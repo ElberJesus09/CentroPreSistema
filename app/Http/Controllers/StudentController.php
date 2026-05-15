@@ -52,6 +52,13 @@ class StudentController extends Controller
         return redirect()->route('students.index')->with('success', 'Alumno registrado correctamente.');
     }
 
+    public function show(Student $student, StudentService $studentService): View
+    {
+        return view('students.show', [
+            'student' => $studentService->studentForAdminView($student),
+        ]);
+    }
+
     public function edit(Student $student, StudentService $studentService): View
     {
         return view('students.edit', [

@@ -19,7 +19,7 @@ class DashboardService
      *
      * @return array<string, mixed>
      */
-    public function chartData(?Staff $user, ?int $year = null, ?int $careerId = null): array
+    public function chartData(?Staff $user, ?int $year = null, ?int $careerId = null, ?int $academicCycleId = null): array
     {
         if ($user === null) {
             return [];
@@ -28,7 +28,7 @@ class DashboardService
         $out = [];
 
         if ($user->canAccessStudentsModule()) {
-            $base = $this->filteredStudentQuery($year, $careerId);
+            $base = $this->filteredStudentQuery($year, $careerId, $academicCycleId);
 
             $out['kpis'] = $this->studentKpis($base);
             $out['student_status'] = $this->studentsByStatusChart($base);
@@ -37,13 +37,13 @@ class DashboardService
         }
 
         if ($user->canAccessAcademicCyclesModule()) {
-            $occupancy = $this->globalOccupancyDonut($year);
+            $occupancy = $this->globalOccupancyDonut($year, $academicCycleId);
 
             if ($occupancy !== null) {
                 $out['occupancy'] = $occupancy;
             }
 
-            $campus = $this->campusLoadChart($year);
+            $campus = $this->campusLoadChart($year, $academicCycleId);
 
             if ($campus !== null) {
                 $out['campus_load'] = $campus;
@@ -90,7 +90,16 @@ class DashboardService
             ->get(['id', 'name', 'code']);
     }
 
-    private function filteredStudentQuery(?int $year, ?int $careerId): Builder
+    /** @return Collection<int, AcademicCycle> */
+    public function filterCycleOptions(): Collection
+    {
+        return AcademicCycle::query()
+            ->orderByDesc('start_date')
+            ->orderByDesc('id')
+            ->get(['id', 'name', 'start_date']);
+    }
+
+    private function filteredStudentQuery(?int $year, ?int $careerId, ?int $academicCycleId): Builder
     {
         $q = Student::query();
 
@@ -100,6 +109,10 @@ class DashboardService
 
         if ($careerId !== null) {
             $q->where('career_id', $careerId);
+        }
+
+        if ($academicCycleId !== null) {
+            $q->where('academic_cycle_id', $academicCycleId);
         }
 
         return $q;
@@ -314,12 +327,12 @@ class DashboardService
     /**
      * @return array{labels: list<string>, values: list<int>}|null
      */
-    private function globalOccupancyDonut(?int $year): ?array
+    private function globalOccupancyDonut(?int $year, ?int $academicCycleId): ?array
     {
         $base = AcademicCycleShift::query()
             ->where('status', true);
 
-        $this->applyAcademicCycleYearFilter($base, $year);
+        $this->applyAcademicCycleFilters($base, $year, $academicCycleId);
 
         $capacity = (int) (clone $base)->sum('capacity');
 
@@ -344,7 +357,7 @@ class DashboardService
      *     available: list<int>
      * }|null
      */
-    private function campusLoadChart(?int $year): ?array
+    private function campusLoadChart(?int $year, ?int $academicCycleId): ?array
     {
         $query = AcademicCycleShift::query()
             ->where('academic_cycle_shifts.status', true)
@@ -361,6 +374,10 @@ class DashboardService
             )
             ->groupBy('campuses.id', 'campuses.name')
             ->orderBy('campuses.name');
+
+        if ($academicCycleId !== null) {
+            $query->where('academic_cycle_shifts.academic_cycle_id', $academicCycleId);
+        }
 
         if ($year !== null) {
             $query
@@ -426,8 +443,12 @@ class DashboardService
         return array_filter($chartPayload) !== [];
     }
 
-    private function applyAcademicCycleYearFilter(Builder $query, ?int $year): void
+    private function applyAcademicCycleFilters(Builder $query, ?int $year, ?int $academicCycleId): void
     {
+        if ($academicCycleId !== null) {
+            $query->where('academic_cycle_id', $academicCycleId);
+        }
+
         if ($year === null) {
             return;
         }

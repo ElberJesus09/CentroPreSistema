@@ -89,7 +89,7 @@ Route::prefix('admin')->group(function (): void {
             Route::get('students/{student}/registration-documents/download', [StudentController::class, 'downloadRegistrationDocuments'])
                 ->middleware('throttle:admin-student-documents-download')
                 ->name('students.registration-documents.download');
-            Route::resource('students', StudentController::class)->except(['show']);
+            Route::resource('students', StudentController::class);
         });
     });
 });

@@ -26,7 +26,7 @@
                 name="search"
                 type="search"
                 value="{{ $filters['search'] ?? '' }}"
-                placeholder="Nombre, DNI o correo"
+                placeholder="DNI, alumno, carrera, correo, ciclo o turno"
                 class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
         </div>
@@ -84,12 +84,10 @@
         @endif
         <thead class="bg-surface-container-high text-xs font-bold uppercase tracking-wide text-on-surface-variant">
             <tr>
-                <th class="px-4 py-3">ID</th>
                 <th class="px-4 py-3">Alumno</th>
                 <th class="px-4 py-3">DNI</th>
                 <th class="px-4 py-3">Carrera</th>
                 <th class="px-4 py-3">Ciclo</th>
-                <th class="px-4 py-3">Sede</th>
                 <th class="px-4 py-3">Turno</th>
                 <th class="px-4 py-3">Estado</th>
                 <th class="px-4 py-3">Fecha registro</th>
@@ -99,12 +97,10 @@
         <tbody class="divide-y divide-outline-variant/50 text-on-surface">
             @forelse ($students as $row)
                 <tr class="hover:bg-surface-container-low/80">
-                    <td class="whitespace-nowrap px-4 py-3 text-on-surface-variant">{{ $row->id }}</td>
                     <td class="min-w-[10rem] px-4 py-3 font-medium">{{ $row->fullName() }}</td>
                     <td class="whitespace-nowrap px-4 py-3">{{ $row->dni }}</td>
                     <td class="whitespace-nowrap px-4 py-3">{{ $row->career?->name }}</td>
-                    <td class="whitespace-nowrap px-4 py-3">{{ $row->schedule?->academicCycle?->name }}</td>
-                    <td class="whitespace-nowrap px-4 py-3">{{ $row->schedule?->campus?->name }}</td>
+                    <td class="whitespace-nowrap px-4 py-3">{{ $row->academicCycle?->name ?? $row->schedule?->academicCycle?->name }}</td>
                     <td class="whitespace-nowrap px-4 py-3">{{ $row->schedule?->shift?->name }}</td>
                     <td class="whitespace-nowrap px-4 py-3">
                         @if ($row->status === \App\Models\Student::STATUS_ACTIVE)
@@ -119,21 +115,10 @@
                     <td
                         class="sticky right-0 whitespace-nowrap bg-surface-container-lowest px-4 py-3 text-right shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.08)]"
                     >
-                        @can('downloadRegistrationDocuments', $row)
-                            <a
-                                href="{{ route('students.registration-documents.download', $row) }}"
-                                class="mr-2 text-sm font-semibold text-on-surface-variant hover:text-primary hover:underline"
-                            >
-                                Descargar PDFs
+                        @can('view', $row)
+                            <a href="{{ route('students.show', $row) }}" class="mr-2 text-sm font-semibold text-on-surface-variant hover:text-primary hover:underline">
+                                Ver
                             </a>
-                        @endcan
-                        @can('resendRegistrationMail', $row)
-                            <form method="post" action="{{ route('students.registration-mail.resend', $row) }}" class="mr-2 inline">
-                                @csrf
-                                <button type="submit" class="text-sm font-semibold text-on-surface-variant hover:text-primary hover:underline">
-                                    Reenviar correo
-                                </button>
-                            </form>
                         @endcan
                         @can('update', $row)
                             <a href="{{ route('students.edit', $row) }}" class="mr-2 text-sm font-semibold text-primary hover:underline">
@@ -162,7 +147,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="10" class="px-4 py-8 text-center text-sm text-on-surface-variant">No hay alumnos registrados.</td>
+                    <td colspan="8" class="px-4 py-8 text-center text-sm text-on-surface-variant">No hay alumnos registrados.</td>
                 </tr>
             @endforelse
         </tbody>
