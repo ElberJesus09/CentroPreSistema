@@ -18,6 +18,64 @@
         @endcan
     </div>
 
+    <form method="get" action="{{ route('students.index') }}" class="mb-5 grid gap-3 rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-4 shadow-sm md:grid-cols-[minmax(12rem,2fr)_minmax(9rem,1fr)_minmax(12rem,1.4fr)_auto] md:items-end">
+        <div>
+            <label for="student-search" class="mb-1 block text-xs font-bold uppercase tracking-wide text-on-surface-variant">Buscar</label>
+            <input
+                id="student-search"
+                name="search"
+                type="search"
+                value="{{ $filters['search'] ?? '' }}"
+                placeholder="Nombre, DNI o correo"
+                class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+        </div>
+        <div>
+            <label for="student-year" class="mb-1 block text-xs font-bold uppercase tracking-wide text-on-surface-variant">Año</label>
+            <select
+                id="student-year"
+                name="year"
+                class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+                <option value="">Todos</option>
+                @foreach ($filterYears as $year)
+                    <option value="{{ $year }}" @selected((int) ($filters['year'] ?? 0) === (int) $year)>{{ $year }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label for="student-cycle" class="mb-1 block text-xs font-bold uppercase tracking-wide text-on-surface-variant">Ciclo</label>
+            <select
+                id="student-cycle"
+                name="academic_cycle_id"
+                class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+                <option value="">Todos los ciclos</option>
+                @foreach ($filterCycles as $cycle)
+                    <option value="{{ $cycle->id }}" @selected((int) ($filters['academic_cycle_id'] ?? 0) === (int) $cycle->id)>
+                        {{ $cycle->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="flex gap-2">
+            <button
+                type="submit"
+                class="inline-flex flex-1 items-center justify-center rounded-lg border border-transparent bg-primary px-4 py-2 text-sm font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 md:flex-none"
+            >
+                Filtrar
+            </button>
+            @if (($filters['search'] ?? '') !== '' || ($filters['year'] ?? null) !== null || ($filters['academic_cycle_id'] ?? null) !== null)
+                <a
+                    href="{{ route('students.index') }}"
+                    class="inline-flex flex-1 items-center justify-center rounded-lg border border-outline-variant px-3 py-2 text-sm font-semibold text-primary hover:bg-surface-container-high md:flex-none"
+                >
+                    Limpiar
+                </a>
+            @endif
+        </div>
+    </form>
+
     <x-table.shell>
         @if ($students->hasPages())
             <x-slot:footer>
@@ -90,8 +148,9 @@
                             >
                                 Eliminar
                             </button>
-                            <x-modal id="student-delete-{{ $row->id }}">
-                                <p class="text-sm text-on-surface">¿Eliminar a <strong>{{ $row->fullName() }}</strong>? Se liberará el cupo del turno.</p>
+                            <x-modal id="student-delete-{{ $row->id }}" title="Eliminar alumno">
+                                <p class="mt-3 text-sm text-on-surface">¿Eliminar a <strong>{{ $row->fullName() }}</strong>? Se liberará el cupo del turno.</p>
+                                <p class="mt-2 text-sm text-on-surface-variant">Esta acción no eliminará colegios o apoderados que todavía estén vinculados a otros alumnos.</p>
                                 <form method="post" action="{{ route('students.destroy', $row) }}" class="mt-4 flex gap-2">
                                     @csrf
                                     @method('DELETE')

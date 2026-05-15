@@ -13,7 +13,7 @@
         @if ($filterYears->isNotEmpty() || $filterCareers->isNotEmpty())
             <form method="get" action="{{ route('dashboard') }}" class="flex flex-wrap items-end gap-3 rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-4 shadow-sm">
                 <div class="min-w-[10rem] flex-1">
-                    <label for="dash-year" class="mb-1 block text-xs font-bold uppercase tracking-wide text-on-surface-variant">Año (inscripción)</label>
+                    <label for="dash-year" class="mb-1 block text-xs font-bold uppercase tracking-wide text-on-surface-variant">Año</label>
                     <select
                         id="dash-year"
                         name="year"

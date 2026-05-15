@@ -23,9 +23,15 @@ class AcademicCycleService
     }
 
     /** Metricas agregadas para dashboard (sin graficos). */
-    public function dashboardAcademicMetrics(): array
+    public function dashboardAcademicMetrics(?int $year = null): array
     {
         $base = AcademicCycleShift::query()->where('status', true);
+
+        if ($year !== null) {
+            $base->whereHas('academicCycle', function (Builder $query) use ($year): void {
+                $query->whereBetween('start_date', ["{$year}-01-01", "{$year}-12-31"]);
+            });
+        }
 
         $totalCapacity = (int) (clone $base)->sum('capacity');
         $totalEnrolled = (int) (clone $base)->sum('enrolled');
@@ -166,6 +172,12 @@ class AcademicCycleService
 
     public function deleteSchedule(AcademicCycleShift $schedule): void
     {
+        if ($schedule->students()->exists()) {
+            throw ValidationException::withMessages([
+                'delete' => ['No se puede eliminar la programación: tiene alumnos matriculados.'],
+            ]);
+        }
+
         $schedule->delete();
     }
 

@@ -60,10 +60,16 @@ class StaffService
     }
 
     /** Roles asignables en formularios (excluye inactivos si aplica). */
-    public function assignableRolesQuery(): Builder
+    public function assignableRolesQuery(?Staff $actor = null): Builder
     {
-        return Role::query()
+        $query = Role::query()
             ->where('status', true)
             ->orderBy('name');
+
+        if ($actor !== null && ! $actor->isSuperAdmin()) {
+            $query->where('name', '!=', Role::NAME_SUPER_ADMIN);
+        }
+
+        return $query;
     }
 }

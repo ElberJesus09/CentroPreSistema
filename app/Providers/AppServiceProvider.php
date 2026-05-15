@@ -41,6 +41,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->ip());
         });
 
+        RateLimiter::for('public-registration-lookup', function (Request $request) {
+            return Limit::perMinute(30)->by($request->ip());
+        });
+
         RateLimiter::for('admin-login', function (Request $request) {
             return Limit::perMinute(10)->by($request->ip());
         });

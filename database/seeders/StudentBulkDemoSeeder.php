@@ -22,12 +22,14 @@ class StudentBulkDemoSeeder extends Seeder
             return;
         }
 
-        $scheduleId = DB::table('academic_cycle_shifts')->orderBy('id')->value('id');
-        if ($scheduleId === null) {
+        $schedule = DB::table('academic_cycle_shifts')->orderBy('id')->first(['id', 'academic_cycle_id']);
+        if ($schedule === null) {
             $this->command?->warn('StudentBulkDemoSeeder: sin programación académica; ejecute AcademicDemoDataSeeder antes.');
 
             return;
         }
+        $scheduleId = (int) $schedule->id;
+        $academicCycleId = (int) $schedule->academic_cycle_id;
 
         $processes2025 = AdmissionProcess::query()
             ->whereYear('start_date', 2025)
@@ -115,6 +117,7 @@ class StudentBulkDemoSeeder extends Seeder
                 'guardian_id' => $guardianIds[$i],
                 'school_id' => $schoolId,
                 'career_id' => $careerId,
+                'academic_cycle_id' => $academicCycleId,
                 'academic_cycle_shift_id' => $scheduleId,
                 'status' => $status,
                 'admission_process_id' => $processId,

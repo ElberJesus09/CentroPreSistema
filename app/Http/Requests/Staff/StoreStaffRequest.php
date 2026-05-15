@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Staff;
 
+use App\Models\Role;
 use App\Models\Staff;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -28,8 +29,19 @@ class StoreStaffRequest extends FormRequest
             'email' => ['required', 'email:rfc', 'max:255', Rule::unique('staff', 'email')],
             'username' => ['required', 'string', 'max:64', Rule::unique('staff', 'username')],
             'password' => ['required', 'confirmed', Password::min(8)],
-            'role_id' => ['required', 'integer', Rule::exists('roles', 'id')],
+            'role_id' => ['required', 'integer', $this->assignableRoleRule()],
             'status' => ['required', 'boolean'],
         ];
+    }
+
+    private function assignableRoleRule(): mixed
+    {
+        $allowed = $this->user()?->isSuperAdmin()
+            ? [Role::NAME_SUPER_ADMIN, Role::NAME_ADMIN, Role::NAME_TRABAJADOR]
+            : [Role::NAME_ADMIN, Role::NAME_TRABAJADOR];
+
+        return Rule::exists('roles', 'id')
+            ->where('status', true)
+            ->whereIn('name', $allowed);
     }
 }

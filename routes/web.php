@@ -45,6 +45,10 @@ Route::post('/registration/finish', [RegistrationWizardController::class, 'finis
     ->middleware('throttle:public-registration-finish')
     ->name('registration.finish');
 
+Route::get('/registration/dni-lookup', [RegistrationWizardController::class, 'lookupDni'])
+    ->middleware('throttle:public-registration-lookup')
+    ->name('registration.dni-lookup');
+
 Route::get('/registration/complete', [RegistrationWizardController::class, 'complete'])
     ->name('registration.complete');
 

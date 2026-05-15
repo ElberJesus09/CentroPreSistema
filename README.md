@@ -1,12 +1,12 @@
 # Centro Pre Sistema
 
-Aplicación web Laravel para portal público de información y registro de alumnos, y panel administrativo bajo el prefijo `/admin`.
+Aplicación web CPU UNPRG para portal público de información y registro de alumnos, y panel administrativo bajo el prefijo `/admin`.
 
 ## Requisitos
 
 - PHP 8.5+
 - Composer
-- Base de datos compatible con Laravel (SQLite, MySQL, etc.)
+- Base de datos compatible con el framework del proyecto (SQLite, MySQL, etc.)
 
 ## Puesta en marcha (resumen)
 
@@ -26,7 +26,7 @@ Ajusta `APP_URL` y la conexión de base de datos en `.env`.
 
 No requieren sesión. Son la cara visible del sitio: inicio, catálogos y flujo de preinscripción.
 
-| Método | URI | Nombre Laravel | Qué hace |
+| Método | URI | Nombre de ruta | Qué hace |
 |--------|-----|----------------|----------|
 | `GET` | `/` | `home` | Página de inicio pública (resumen / enlaces al portal). |
 | `GET` | `/careers` | `careers` | Listado de carreras activas (catálogo público). |
@@ -60,7 +60,7 @@ Prefijo común: **`/admin`**. El login de staff vive aquí; el resto exige usuar
 | `POST` | `/admin/login` | — | Procesa login. **10 intentos por minuto** por IP (`throttle:admin-login`). |
 | `POST` | `/admin/logout` | `logout` | Cierra sesión (requiere `auth`). |
 
-Los usuarios no autenticados que intenten acceder a rutas protegidas son redirigidos a `route('login')` (`/admin/login`). Tras login, Laravel redirige al `dashboard`.
+Los usuarios no autenticados que intenten acceder a rutas protegidas son redirigidos a `route('login')` (`/admin/login`). Tras iniciar sesión, CPU UNPRG redirige al `dashboard`.
 
 ### Área autenticada (todas `GET`/`POST`/`PUT`/`PATCH`/`DELETE` bajo `/admin` con `auth`)
 
@@ -153,7 +153,7 @@ Los middlewares `staff.module`, `academic-cycles.module` y `students.module` res
 
 | Método | URI | Notas |
 |--------|-----|--------|
-| `GET` | `/up` | Comprobación de salud (health check) de Laravel. |
+| `GET` | `/up` | Comprobación de salud (health check) de CPU UNPRG. |
 | `GET`/`PUT` | `/storage/{path}` | Archivos públicos almacenados (enlace simbólico `storage`). |
 
 ---
@@ -179,4 +179,4 @@ php artisan route:list
 
 ## Licencia
 
-Proyecto sobre Laravel; el framework Laravel se distribuye bajo la [licencia MIT](https://opensource.org/licenses/MIT).
+Proyecto CPU UNPRG; sus dependencias de framework se distribuyen bajo sus respectivas licencias.

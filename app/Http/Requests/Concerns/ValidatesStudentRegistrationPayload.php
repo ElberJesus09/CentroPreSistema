@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Concerns;
 
+use App\Models\AcademicCycleShift;
 use App\Models\Student;
 use Illuminate\Validation\Rule;
 
@@ -16,7 +17,11 @@ trait ValidatesStudentRegistrationPayload
             'student.first_name' => ['required', 'string', 'max:120'],
             'student.last_name' => ['required', 'string', 'max:120'],
             'student.mother_last_name' => ['required', 'string', 'max:120'],
-            'student.dni' => ['required', 'digits:8', Rule::unique('students', 'dni')->ignore($ignoreStudentId)],
+            'student.dni' => [
+                'required',
+                'digits:8',
+                $this->uniqueStudentDniForSelectedCycle($ignoreStudentId),
+            ],
             'student.birth_date' => ['required', 'date'],
             'student.gender' => ['required', 'string', Rule::in(['male', 'female'])],
             'student.phone' => ['required', 'digits:9'],
@@ -80,5 +85,27 @@ trait ValidatesStudentRegistrationPayload
                 Rule::in([Student::STATUS_PENDING, Student::STATUS_ACTIVE, Student::STATUS_REJECTED]),
             ],
         ];
+    }
+
+    private function uniqueStudentDniForSelectedCycle(?int $ignoreStudentId = null): mixed
+    {
+        $scheduleId = filter_var($this->input('academic_cycle_shift_id'), FILTER_VALIDATE_INT);
+
+        if ($scheduleId === false) {
+            return Rule::unique('students', 'dni')->where('id', 0);
+        }
+
+        $cycleId = AcademicCycleShift::query()
+            ->whereKey($scheduleId)
+            ->value('academic_cycle_id');
+
+        if ($cycleId === null) {
+            return Rule::unique('students', 'dni')->where('id', 0);
+        }
+
+        $rule = Rule::unique('students', 'dni')
+            ->where('academic_cycle_id', $cycleId);
+
+        return $ignoreStudentId === null ? $rule : $rule->ignore($ignoreStudentId);
     }
 }

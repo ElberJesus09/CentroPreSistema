@@ -13,6 +13,7 @@ use App\Models\Career;
 use App\Models\ExamSetting;
 use App\Services\PublicRegistrationCompletionService;
 use App\Services\StudentService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -68,13 +69,31 @@ class RegistrationWizardController extends Controller
         ]);
     }
 
-    public function storeStep1(RegistrationStep1Request $request): RedirectResponse
+    public function storeStep1(RegistrationStep1Request $request, StudentService $studentService): RedirectResponse
     {
         $draft = $request->session()->get(self::SESSION_KEY, []);
         $draft['student'] = $request->validated('student');
+
+        $profile = $studentService->profileForDni((string) $draft['student']['dni']);
+        if (is_array($profile)) {
+            $draft['guardian'] ??= $profile['guardian'] ?? null;
+            $draft['school'] ??= $profile['school'] ?? null;
+        }
+
         $request->session()->put(self::SESSION_KEY, $draft);
 
         return redirect()->route('registration.step.show', ['step' => 2]);
+    }
+
+    public function lookupDni(Request $request, StudentService $studentService): JsonResponse
+    {
+        $dni = (string) $request->query('dni', '');
+        $profile = $studentService->profileForDni($dni);
+
+        return response()->json([
+            'found' => $profile !== null,
+            'profile' => $profile,
+        ]);
     }
 
     public function storeStep2(RegistrationStep2Request $request): RedirectResponse

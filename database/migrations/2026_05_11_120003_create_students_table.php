@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('mother_last_name');
-            $table->string('dni', 8)->unique();
+            $table->string('dni', 8);
             $table->date('birth_date');
             $table->string('gender', 16);
             $table->string('phone', 9);
@@ -23,9 +23,12 @@ return new class extends Migration
             $table->foreignId('guardian_id')->constrained('guardians')->cascadeOnUpdate()->restrictOnDelete();
             $table->foreignId('school_id')->constrained('schools')->cascadeOnUpdate()->restrictOnDelete();
             $table->foreignId('career_id')->constrained('careers')->cascadeOnUpdate()->restrictOnDelete();
+            $table->foreignId('academic_cycle_id')->constrained('academic_cycles')->cascadeOnUpdate()->restrictOnDelete();
             $table->foreignId('academic_cycle_shift_id')->constrained('academic_cycle_shifts')->cascadeOnUpdate()->restrictOnDelete();
             $table->string('status', 32)->default('pending');
             $table->timestamps();
+
+            $table->unique(['dni', 'academic_cycle_id'], 'students_dni_academic_cycle_unique');
         });
     }
 

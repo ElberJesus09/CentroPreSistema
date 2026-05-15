@@ -26,7 +26,7 @@ class StaffController extends Controller
     public function create(StaffService $staffService): View
     {
         return view('staff.create', [
-            'roles' => $staffService->assignableRolesQuery()->get(),
+            'roles' => $staffService->assignableRolesQuery(auth()->user())->get(),
         ]);
     }
 
@@ -43,7 +43,7 @@ class StaffController extends Controller
     {
         return view('staff.edit', [
             'staffMember' => $staff->load('role'),
-            'roles' => $staffService->assignableRolesQuery()->get(),
+            'roles' => $staffService->assignableRolesQuery(auth()->user())->get(),
         ]);
     }
 

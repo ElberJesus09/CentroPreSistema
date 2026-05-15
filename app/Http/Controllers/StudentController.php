@@ -21,10 +21,19 @@ class StudentController extends Controller
         $this->authorizeResource(Student::class, 'student');
     }
 
-    public function index(StudentService $studentService): View
+    public function index(Request $request, StudentService $studentService): View
     {
+        $filters = [
+            'search' => mb_substr(trim((string) $request->query('search', '')), 0, 100),
+            'year' => $this->optionalInt($request->query('year')),
+            'academic_cycle_id' => $this->optionalInt($request->query('academic_cycle_id')),
+        ];
+
         return view('students.index', [
-            'students' => $studentService->paginateStudents(),
+            'students' => $studentService->paginateStudents(filters: $filters),
+            'filterYears' => $studentService->studentFilterYears(),
+            'filterCycles' => $studentService->studentFilterCycles(),
+            'filters' => $filters,
         ]);
     }
 
@@ -91,5 +100,16 @@ class StudentController extends Controller
         $pack = $studentPdfService->createRegistrationDocumentsZip($student);
 
         return response()->download($pack['path'], $pack['download_name'])->deleteFileAfterSend(true);
+    }
+
+    private function optionalInt(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $i = filter_var($value, FILTER_VALIDATE_INT);
+
+        return $i === false ? null : $i;
     }
 }

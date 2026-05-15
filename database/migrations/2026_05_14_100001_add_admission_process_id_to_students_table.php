@@ -25,6 +25,7 @@ return new class extends Migration
     {
         Schema::table('students', function (Blueprint $table) {
             $table->dropForeign(['admission_process_id']);
+            $table->dropColumn('admission_process_id');
         });
     }
 };

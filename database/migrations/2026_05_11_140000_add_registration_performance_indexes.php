@@ -11,6 +11,7 @@ return new class extends Migration
     {
         Schema::table('students', function (Blueprint $table) {
             $table->index('academic_cycle_shift_id');
+            $table->index('academic_cycle_id');
             $table->index('career_id');
         });
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('students', function (Blueprint $table) {
             $table->dropIndex(['academic_cycle_shift_id']);
+            $table->dropIndex(['academic_cycle_id']);
             $table->dropIndex(['career_id']);
         });
 

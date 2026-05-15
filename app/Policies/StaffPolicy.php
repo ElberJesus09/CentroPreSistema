@@ -24,7 +24,15 @@ class StaffPolicy
 
     public function update(Staff $user, Staff $model): bool
     {
-        return $this->staffManagementRoles($user);
+        if (! $this->staffManagementRoles($user)) {
+            return false;
+        }
+
+        if ($model->role?->name === Role::NAME_SUPER_ADMIN && ! $user->isSuperAdmin()) {
+            return false;
+        }
+
+        return true;
     }
 
     public function delete(Staff $user, Staff $model): bool
@@ -37,7 +45,7 @@ class StaffPolicy
             return false;
         }
 
-        return true;
+        return $model->role?->name !== Role::NAME_SUPER_ADMIN || $user->isSuperAdmin();
     }
 
     /** super_admin y admin gestionan staff; trabajador no. */

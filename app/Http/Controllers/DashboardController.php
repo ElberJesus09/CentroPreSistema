@@ -12,13 +12,13 @@ class DashboardController extends Controller
     public function __invoke(Request $request, AcademicCycleService $academicCycleService, DashboardService $dashboardService): View
     {
         $user = auth()->user();
-        $academicMetrics = null;
-        if ($user?->canAccessAcademicCyclesModule()) {
-            $academicMetrics = $academicCycleService->dashboardAcademicMetrics();
-        }
-
         $year = $this->optionalInt($request->query('year'));
         $careerId = $this->optionalInt($request->query('career_id'));
+
+        $academicMetrics = null;
+        if ($user?->canAccessAcademicCyclesModule()) {
+            $academicMetrics = $academicCycleService->dashboardAcademicMetrics($year);
+        }
 
         $chartData = $dashboardService->chartData($user, $year, $careerId);
         $chartPayload = $dashboardService->chartPayloadForClient($chartData);

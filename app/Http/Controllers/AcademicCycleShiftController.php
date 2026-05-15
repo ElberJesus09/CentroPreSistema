@@ -7,6 +7,7 @@ use App\Http\Requests\AcademicCycleShift\UpdateAcademicCycleShiftRequest;
 use App\Models\AcademicCycleShift;
 use App\Services\AcademicCycleService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AcademicCycleShiftController extends Controller
@@ -62,7 +63,11 @@ class AcademicCycleShiftController extends Controller
 
     public function destroy(AcademicCycleShift $schedule, AcademicCycleService $academicCycleService): RedirectResponse
     {
-        $academicCycleService->deleteSchedule($schedule);
+        try {
+            $academicCycleService->deleteSchedule($schedule);
+        } catch (ValidationException $e) {
+            return redirect()->route('academic-cycles.index')->withErrors($e->errors());
+        }
 
         return redirect()->route('academic-cycles.index')->with('success', 'Programacion eliminada correctamente.');
     }

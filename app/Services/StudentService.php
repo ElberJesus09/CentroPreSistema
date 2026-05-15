@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AcademicCycle;
 use App\Models\AcademicCycleShift;
 use App\Models\Campus;
 use App\Models\Career;
@@ -9,7 +10,10 @@ use App\Models\Guardian;
 use App\Models\School;
 use App\Models\Student;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -64,13 +68,117 @@ class StudentService
         return $this->cachedActiveCareers();
     }
 
-    /** Listado administrativo con relaciones. */
-    public function paginateStudents(int $perPage = 15): LengthAwarePaginator
+    /**
+     * Listado administrativo con relaciones.
+     *
+     * @param  array{search?: string|null, year?: int|null, academic_cycle_id?: int|null}  $filters
+     */
+    public function paginateStudents(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
-        return Student::query()
-            ->with(['career', 'schedule.academicCycle', 'schedule.campus', 'schedule.shift'])
+        $query = Student::query()
+            ->with(['career', 'academicCycle', 'schedule.academicCycle', 'schedule.campus', 'schedule.shift'])
+            ->orderByDesc('id');
+
+        $search = trim((string) ($filters['search'] ?? ''));
+        if ($search !== '') {
+            $query->where(function (Builder $q) use ($search): void {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('mother_last_name', 'like', "%{$search}%")
+                    ->orWhere('dni', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $year = $filters['year'] ?? null;
+        $cycleId = $filters['academic_cycle_id'] ?? null;
+        if ($year !== null || $cycleId !== null) {
+            $query->whereHas('schedule.academicCycle', function (Builder $q) use ($year, $cycleId): void {
+                if ($year !== null) {
+                    $q->whereBetween('start_date', ["{$year}-01-01", "{$year}-12-31"]);
+                }
+
+                if ($cycleId !== null) {
+                    $q->whereKey($cycleId);
+                }
+            });
+        }
+
+        return $query->paginate($perPage)->withQueryString();
+    }
+
+    /** @return SupportCollection<int, int> */
+    public function studentFilterYears(): SupportCollection
+    {
+        return AcademicCycle::query()
+            ->whereNotNull('start_date')
+            ->pluck('start_date')
+            ->map(fn ($date) => (int) substr((string) $date, 0, 4))
+            ->filter()
+            ->unique()
+            ->sortDesc()
+            ->values();
+    }
+
+    /** @return Collection<int, AcademicCycle> */
+    public function studentFilterCycles(): Collection
+    {
+        return AcademicCycle::query()
+            ->orderByDesc('start_date')
             ->orderByDesc('id')
-            ->paginate($perPage);
+            ->get(['id', 'name', 'start_date']);
+    }
+
+    /**
+     * Perfil más reciente para autocompletar por DNI.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function profileForDni(string $dni): ?array
+    {
+        if (! preg_match('/^\d{8}$/', $dni)) {
+            return null;
+        }
+
+        $student = Student::query()
+            ->with(['guardian', 'school'])
+            ->where('dni', $dni)
+            ->orderByDesc('registration_date')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($student === null) {
+            return null;
+        }
+
+        return [
+            'student' => [
+                'first_name' => $student->first_name,
+                'last_name' => $student->last_name,
+                'mother_last_name' => $student->mother_last_name,
+                'dni' => $student->dni,
+                'birth_date' => $student->birth_date?->format('Y-m-d'),
+                'gender' => $student->gender,
+                'phone' => $student->phone,
+                'address' => $student->address,
+                'email' => $student->email,
+            ],
+            'guardian' => $student->guardian === null ? null : [
+                'first_name' => $student->guardian->first_name,
+                'last_name' => $student->guardian->last_name,
+                'mother_last_name' => $student->guardian->mother_last_name,
+                'dni' => $student->guardian->dni,
+                'phone' => $student->guardian->phone,
+                'relationship' => $student->guardian->relationship,
+            ],
+            'school' => $student->school === null ? null : [
+                'name' => $student->school->name,
+                'department' => $student->school->department,
+                'province' => $student->school->province,
+                'district' => $student->school->district,
+                'graduation_year' => $student->school->graduation_year,
+            ],
+        ];
     }
 
     /**
@@ -118,30 +226,38 @@ class StudentService
     {
         $validated = $this->sanitizeRegistrationPayload($validated);
 
-        $student = DB::transaction(function () use ($validated) {
-            $scheduleId = (int) $validated['academic_cycle_shift_id'];
-            $schedule = AcademicCycleShift::query()->lockForUpdate()->findOrFail($scheduleId);
-            $this->assertScheduleAcceptsEnrollment($schedule);
+        try {
+            $student = DB::transaction(function () use ($validated) {
+                $scheduleId = (int) $validated['academic_cycle_shift_id'];
+                $schedule = AcademicCycleShift::query()->lockForUpdate()->findOrFail($scheduleId);
+                $this->assertScheduleAcceptsEnrollment($schedule);
+                $this->assertStudentIsNotRegisteredInCycle((string) $validated['student']['dni'], (int) $schedule->academic_cycle_id);
 
-            $guardian = Guardian::query()->create($validated['guardian']);
-            $school = School::query()->create($validated['school']);
+                $guardian = Guardian::query()->create($validated['guardian']);
+                $school = School::query()->create($validated['school']);
 
-            $status = $validated['status'] ?? Student::STATUS_PENDING;
+                $status = $validated['status'] ?? Student::STATUS_PENDING;
 
-            $student = Student::query()->create([
-                ...$validated['student'],
-                'career_id' => (int) $validated['career_id'],
-                'academic_cycle_shift_id' => $scheduleId,
-                'guardian_id' => $guardian->id,
-                'school_id' => $school->id,
-                'registration_date' => now()->toDateString(),
-                'status' => $status,
-            ]);
+                $student = Student::query()->create([
+                    ...$validated['student'],
+                    'career_id' => (int) $validated['career_id'],
+                    'academic_cycle_id' => (int) $schedule->academic_cycle_id,
+                    'academic_cycle_shift_id' => $scheduleId,
+                    'guardian_id' => $guardian->id,
+                    'school_id' => $school->id,
+                    'registration_date' => now()->toDateString(),
+                    'status' => $status,
+                ]);
 
-            $schedule->increment('enrolled');
+                $schedule->increment('enrolled');
 
-            return $student->fresh()->load(['guardian', 'school', 'career', 'schedule.academicCycle', 'schedule.campus', 'schedule.shift']);
-        });
+                return $student->fresh()->load(['guardian', 'school', 'career', 'academicCycle', 'schedule.academicCycle', 'schedule.campus', 'schedule.shift']);
+            });
+        } catch (QueryException $e) {
+            $this->throwDuplicateCycleValidationIfNeeded($e);
+
+            throw $e;
+        }
 
         $this->forgetPublicScheduleCatalogCache();
 
@@ -155,38 +271,58 @@ class StudentService
     {
         $validated = $this->sanitizeRegistrationPayload($validated);
 
-        $student = DB::transaction(function () use ($student, $validated) {
-            $student->load(['guardian', 'school']);
-            $newScheduleId = (int) $validated['academic_cycle_shift_id'];
+        try {
+            $student = DB::transaction(function () use ($student, $validated) {
+                $student->load(['guardian', 'school']);
+                $newScheduleId = (int) $validated['academic_cycle_shift_id'];
+                $newSchedule = null;
 
-            if ($newScheduleId !== (int) $student->academic_cycle_shift_id) {
-                $oldId = (int) $student->academic_cycle_shift_id;
-                $ids = [$oldId, $newScheduleId];
-                sort($ids);
-                $locked = [];
-                foreach ($ids as $id) {
-                    $locked[$id] = AcademicCycleShift::query()->lockForUpdate()->findOrFail($id);
+                if ($newScheduleId !== (int) $student->academic_cycle_shift_id) {
+                    $oldId = (int) $student->academic_cycle_shift_id;
+                    $ids = [$oldId, $newScheduleId];
+                    sort($ids);
+                    $locked = [];
+                    foreach ($ids as $id) {
+                        $locked[$id] = AcademicCycleShift::query()->lockForUpdate()->findOrFail($id);
+                    }
+                    $oldSchedule = $locked[$oldId];
+                    $newSchedule = $locked[$newScheduleId];
+                    $this->assertScheduleAcceptsEnrollment($newSchedule);
+                    $this->assertStudentIsNotRegisteredInCycle(
+                        (string) $validated['student']['dni'],
+                        (int) $newSchedule->academic_cycle_id,
+                        (int) $student->id,
+                    );
+                    $oldSchedule->decrement('enrolled');
+                    $newSchedule->increment('enrolled');
+                } else {
+                    $newSchedule = AcademicCycleShift::query()->findOrFail($newScheduleId);
+                    $this->assertStudentIsNotRegisteredInCycle(
+                        (string) $validated['student']['dni'],
+                        (int) $newSchedule->academic_cycle_id,
+                        (int) $student->id,
+                    );
                 }
-                $oldSchedule = $locked[$oldId];
-                $newSchedule = $locked[$newScheduleId];
-                $this->assertScheduleAcceptsEnrollment($newSchedule);
-                $oldSchedule->decrement('enrolled');
-                $newSchedule->increment('enrolled');
-            }
 
-            $student->guardian?->update($validated['guardian']);
-            $student->school?->update($validated['school']);
+                $student->guardian?->update($validated['guardian']);
+                $student->school?->update($validated['school']);
 
-            $student->fill([
-                ...$validated['student'],
-                'career_id' => (int) $validated['career_id'],
-                'academic_cycle_shift_id' => $newScheduleId,
-                'status' => $validated['status'],
-            ]);
-            $student->save();
+                $student->fill([
+                    ...$validated['student'],
+                    'career_id' => (int) $validated['career_id'],
+                    'academic_cycle_id' => (int) $newSchedule->academic_cycle_id,
+                    'academic_cycle_shift_id' => $newScheduleId,
+                    'status' => $validated['status'],
+                ]);
+                $student->save();
 
-            return $student->fresh()->load(['guardian', 'school', 'career', 'schedule.academicCycle', 'schedule.campus', 'schedule.shift']);
-        });
+                return $student->fresh()->load(['guardian', 'school', 'career', 'academicCycle', 'schedule.academicCycle', 'schedule.campus', 'schedule.shift']);
+            });
+        } catch (QueryException $e) {
+            $this->throwDuplicateCycleValidationIfNeeded($e);
+
+            throw $e;
+        }
 
         $this->forgetPublicScheduleCatalogCache();
 
@@ -201,11 +337,18 @@ class StudentService
             $guardianId = $student->guardian_id;
             $schoolId = $student->school_id;
 
-            $schedule->decrement('enrolled');
+            if ($schedule->enrolled > 0) {
+                $schedule->decrement('enrolled');
+            }
             $student->delete();
 
-            Guardian::query()->whereKey($guardianId)->delete();
-            School::query()->whereKey($schoolId)->delete();
+            if ($guardianId !== null && ! Student::query()->where('guardian_id', $guardianId)->exists()) {
+                Guardian::query()->whereKey($guardianId)->delete();
+            }
+
+            if ($schoolId !== null && ! Student::query()->where('school_id', $schoolId)->exists()) {
+                School::query()->whereKey($schoolId)->delete();
+            }
         });
 
         $this->forgetPublicScheduleCatalogCache();
@@ -223,6 +366,30 @@ class StudentService
         if ($schedule->enrolled >= $schedule->capacity) {
             throw ValidationException::withMessages([
                 'academic_cycle_shift_id' => ['No hay vacantes disponibles en el turno seleccionado.'],
+            ]);
+        }
+    }
+
+    private function assertStudentIsNotRegisteredInCycle(string $dni, int $academicCycleId, ?int $ignoreStudentId = null): void
+    {
+        $exists = Student::query()
+            ->where('dni', $dni)
+            ->where('academic_cycle_id', $academicCycleId)
+            ->when($ignoreStudentId !== null, fn (Builder $query) => $query->whereKeyNot($ignoreStudentId))
+            ->exists();
+
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'student.dni' => ['Este DNI ya tiene una inscripción registrada en el ciclo seleccionado. Puede inscribirse nuevamente solo en un ciclo diferente.'],
+            ]);
+        }
+    }
+
+    private function throwDuplicateCycleValidationIfNeeded(QueryException $e): void
+    {
+        if (str_contains($e->getMessage(), 'students_dni_academic_cycle_unique')) {
+            throw ValidationException::withMessages([
+                'student.dni' => ['Este DNI ya tiene una inscripción registrada en el ciclo seleccionado.'],
             ]);
         }
     }

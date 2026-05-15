@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AcademicCycle;
 use App\Models\AcademicCycleShift;
 use App\Models\AdmissionProcess;
 use App\Models\Career;
@@ -36,13 +37,13 @@ class DashboardService
         }
 
         if ($user->canAccessAcademicCyclesModule()) {
-            $occupancy = $this->globalOccupancyDonut();
+            $occupancy = $this->globalOccupancyDonut($year);
 
             if ($occupancy !== null) {
                 $out['occupancy'] = $occupancy;
             }
 
-            $campus = $this->campusLoadChart();
+            $campus = $this->campusLoadChart($year);
 
             if ($campus !== null) {
                 $out['campus_load'] = $campus;
@@ -56,19 +57,23 @@ class DashboardService
     public function filterYearOptions(): Collection
     {
         $fromStudents = Student::query()
-            ->selectRaw("strftime('%Y', registration_date) as y")
             ->whereNotNull('registration_date')
-            ->distinct()
-            ->pluck('y');
+            ->pluck('registration_date')
+            ->map(fn ($date) => substr((string) $date, 0, 4));
 
         $fromProcesses = AdmissionProcess::query()
-            ->selectRaw("strftime('%Y', start_date) as y")
             ->whereNotNull('start_date')
-            ->distinct()
-            ->pluck('y');
+            ->pluck('start_date')
+            ->map(fn ($date) => substr((string) $date, 0, 4));
+
+        $fromCycles = AcademicCycle::query()
+            ->whereNotNull('start_date')
+            ->pluck('start_date')
+            ->map(fn ($date) => substr((string) $date, 0, 4));
 
         return $fromStudents
             ->merge($fromProcesses)
+            ->merge($fromCycles)
             ->filter()
             ->unique()
             ->sortDesc()
@@ -90,10 +95,7 @@ class DashboardService
         $q = Student::query();
 
         if ($year !== null) {
-            $q->whereRaw(
-                "strftime('%Y', registration_date) = ?",
-                [(string) $year]
-            );
+            $q->whereBetween('registration_date', ["{$year}-01-01", "{$year}-12-31"]);
         }
 
         if ($careerId !== null) {
@@ -226,10 +228,7 @@ class DashboardService
             $counts = array_fill_keys($keys, 0);
 
             (clone $base)
-                ->whereRaw(
-                    "strftime('%Y', registration_date) = ?",
-                    [(string) $year]
-                )
+                ->whereBetween('registration_date', ["{$year}-01-01", "{$year}-12-31"])
                 ->select('registration_date')
                 ->orderBy('id')
                 ->chunk(2000, function ($chunk) use (&$counts): void {
@@ -315,10 +314,12 @@ class DashboardService
     /**
      * @return array{labels: list<string>, values: list<int>}|null
      */
-    private function globalOccupancyDonut(): ?array
+    private function globalOccupancyDonut(?int $year): ?array
     {
         $base = AcademicCycleShift::query()
             ->where('status', true);
+
+        $this->applyAcademicCycleYearFilter($base, $year);
 
         $capacity = (int) (clone $base)->sum('capacity');
 
@@ -343,9 +344,9 @@ class DashboardService
      *     available: list<int>
      * }|null
      */
-    private function campusLoadChart(): ?array
+    private function campusLoadChart(?int $year): ?array
     {
-        $rows = AcademicCycleShift::query()
+        $query = AcademicCycleShift::query()
             ->where('academic_cycle_shifts.status', true)
             ->join(
                 'campuses',
@@ -359,8 +360,20 @@ class DashboardService
                 DB::raw('SUM(academic_cycle_shifts.capacity) as capacity'),
             )
             ->groupBy('campuses.id', 'campuses.name')
-            ->orderBy('campuses.name')
-            ->get();
+            ->orderBy('campuses.name');
+
+        if ($year !== null) {
+            $query
+                ->join(
+                    'academic_cycles',
+                    'academic_cycles.id',
+                    '=',
+                    'academic_cycle_shifts.academic_cycle_id'
+                )
+                ->whereBetween('academic_cycles.start_date', ["{$year}-01-01", "{$year}-12-31"]);
+        }
+
+        $rows = $query->get();
 
         if ($rows->isEmpty()) {
             return null;
@@ -411,5 +424,16 @@ class DashboardService
     public function hasRenderableCharts(array $chartPayload): bool
     {
         return array_filter($chartPayload) !== [];
+    }
+
+    private function applyAcademicCycleYearFilter(Builder $query, ?int $year): void
+    {
+        if ($year === null) {
+            return;
+        }
+
+        $query->whereHas('academicCycle', function (Builder $cycleQuery) use ($year): void {
+            $cycleQuery->whereBetween('start_date', ["{$year}-01-01", "{$year}-12-31"]);
+        });
     }
 }

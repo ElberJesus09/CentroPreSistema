@@ -1,12 +1,17 @@
 {{-- Modal nativo (dialog). Cerrar con el botón o programáticamente .close() --}}
 @props([
     'id' => 'modal',
+    'title' => null,
 ])
 
 <dialog
     id="{{ $id }}"
     class="w-full max-w-lg rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-xl backdrop:bg-black/40"
+    @if ($title) aria-labelledby="{{ $id }}-title" @endif
 >
+    @if ($title)
+        <h2 id="{{ $id }}-title" class="font-display text-lg font-bold text-primary">{{ $title }}</h2>
+    @endif
     {{ $slot }}
     <div class="mt-6 flex justify-end border-t border-outline-variant/50 pt-4">
         <button
