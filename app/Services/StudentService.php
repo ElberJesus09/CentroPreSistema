@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\AcademicCycle;
 use App\Models\AcademicCycleShift;
-use App\Models\AdmissionProcess;
 use App\Models\Campus;
 use App\Models\Career;
 use App\Models\Guardian;
@@ -27,8 +26,11 @@ class StudentService
     /** Turnos publicos: TTL corto para reflejar cupos sin saturar DB. */
     private const int CACHE_PUBLIC_SCHEDULES = 45;
 
-    /** Cantidad inicial segura para listados administrativos. */
+    /** Cantidad segura para listados administrativos sin filtros. */
     private const int ADMIN_INITIAL_LIMIT = 100;
+
+    /** Filas por pagina en listados administrativos. */
+    private const int ADMIN_PER_PAGE = 25;
 
     /** Turnos con cupo y activos (consulta directa, sin cache). */
     public function availableSchedulesWithRelations(): Collection
@@ -77,7 +79,7 @@ class StudentService
      *
      * @param  array{search?: string|null, year?: int|null, academic_cycle_id?: int|null}  $filters
      */
-    public function paginateStudents(int $perPage = 15, array $filters = []): LengthAwarePaginator
+    public function paginateStudents(int $perPage = self::ADMIN_PER_PAGE, array $filters = []): LengthAwarePaginator
     {
         $query = Student::query()
             ->select([
@@ -87,6 +89,9 @@ class StudentService
                 'mother_last_name',
                 'dni',
                 'email',
+                'payment_voucher_number',
+                'payment_agency_number',
+                'payment_date',
                 'career_id',
                 'academic_cycle_id',
                 'academic_cycle_shift_id',
@@ -115,6 +120,8 @@ class StudentService
                     ->orWhere('mother_last_name', 'like', "%{$search}%")
                     ->orWhere('dni', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('payment_voucher_number', 'like', "%{$search}%")
+                    ->orWhere('payment_agency_number', 'like', "%{$search}%")
                     ->orWhere(function (Builder $names) use ($nameTerms): void {
                         foreach ($nameTerms as $term) {
                             $names->where(function (Builder $part) use ($term): void {
@@ -146,7 +153,7 @@ class StudentService
         }
 
         if ($search === '' && $year === null && $cycleId === null) {
-            $ids = $this->priorityStudentIds();
+            $ids = $this->recentStudentIds();
 
             $ids->isEmpty()
                 ? $query->whereRaw('1 = 0')
@@ -198,57 +205,17 @@ class StudentService
     }
 
     /**
-     * IDs recientes del proceso/ciclo prioritario para paginar solo 100 filas.
+     * IDs recientes para listar solo las ultimas 100 filas sin filtros.
      *
      * @return SupportCollection<int, int>
      */
-    private function priorityStudentIds(): SupportCollection
+    private function recentStudentIds(): SupportCollection
     {
-        $query = Student::query();
-        $process = $this->priorityAdmissionProcess();
-
-        if ($process !== null) {
-            $query->where('admission_process_id', $process->id);
-        } else {
-            $cycle = AcademicCycle::query()
-                ->orderByDesc('start_date')
-                ->orderByDesc('id')
-                ->first(['id']);
-
-            if ($cycle === null) {
-                return collect();
-            }
-
-            $query->where('academic_cycle_id', $cycle->id);
-        }
-
-        return $query
+        return Student::query()
             ->orderByDesc('registration_date')
             ->orderByDesc('id')
             ->limit(self::ADMIN_INITIAL_LIMIT)
             ->pluck('id');
-    }
-
-    private function priorityAdmissionProcess(): ?AdmissionProcess
-    {
-        $today = now()->toDateString();
-
-        $active = AdmissionProcess::query()
-            ->where('status', AdmissionProcess::STATUS_ACTIVO)
-            ->whereDate('start_date', '<=', $today)
-            ->whereDate('end_date', '>=', $today)
-            ->orderByDesc('start_date')
-            ->orderByDesc('id')
-            ->first(['id']);
-
-        if ($active !== null) {
-            return $active;
-        }
-
-        return AdmissionProcess::query()
-            ->orderByDesc('start_date')
-            ->orderByDesc('id')
-            ->first(['id']);
     }
 
     /**
@@ -377,6 +344,7 @@ class StudentService
             });
         } catch (QueryException $e) {
             $this->throwDuplicateCycleValidationIfNeeded($e);
+            $this->throwDuplicatePaymentVoucherValidationIfNeeded($e);
 
             throw $e;
         }
@@ -442,6 +410,7 @@ class StudentService
             });
         } catch (QueryException $e) {
             $this->throwDuplicateCycleValidationIfNeeded($e);
+            $this->throwDuplicatePaymentVoucherValidationIfNeeded($e);
 
             throw $e;
         }
@@ -512,6 +481,15 @@ class StudentService
         if (str_contains($e->getMessage(), 'students_dni_academic_cycle_unique')) {
             throw ValidationException::withMessages([
                 'student.dni' => ['Este DNI ya tiene una inscripción registrada en el ciclo seleccionado.'],
+            ]);
+        }
+    }
+
+    private function throwDuplicatePaymentVoucherValidationIfNeeded(QueryException $e): void
+    {
+        if (str_contains($e->getMessage(), 'students_payment_voucher_number_unique')) {
+            throw ValidationException::withMessages([
+                'student.payment_voucher_number' => ['Este número de voucher ya fue registrado.'],
             ]);
         }
     }

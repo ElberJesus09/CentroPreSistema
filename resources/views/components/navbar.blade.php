@@ -28,6 +28,11 @@
                             Alumnos
                         </a>
                     @endcan
+                    @if (auth()->user()?->canAccessReportsModule())
+                        <a href="{{ route('reports.index') }}" class="block px-4 py-2 text-sm text-on-surface hover:bg-surface-container-high">
+                            Reportes
+                        </a>
+                    @endif
                 </div>
             </details>
         </div>

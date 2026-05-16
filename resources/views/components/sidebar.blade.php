@@ -67,5 +67,17 @@
                 Alumnos
             </a>
         @endcan
+        @if (auth()->user()?->canAccessReportsModule())
+            <a
+                href="{{ route('reports.index') }}"
+                @class([
+                    'rounded-lg px-3 py-2 font-semibold transition-colors',
+                    'bg-white/15 text-white' => str_starts_with((string) $current, 'reports.'),
+                    'text-primary-fixed/90 hover:bg-white/10 hover:text-white' => ! str_starts_with((string) $current, 'reports.'),
+                ])
+            >
+                Reportes
+            </a>
+        @endif
     </nav>
 </aside>

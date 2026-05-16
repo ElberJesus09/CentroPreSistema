@@ -29,6 +29,15 @@ class RegistrationStep4Request extends FormRequest
                     ->where('status', true)
                     ->where(fn ($query) => $query->whereColumn('enrolled', '<', 'capacity')),
             ],
+            'student.payment_voucher_number' => [
+                'required',
+                'string',
+                'max:40',
+                'regex:/^\d+$/',
+                Rule::unique('students', 'payment_voucher_number'),
+            ],
+            'student.payment_agency_number' => ['required', 'digits:4'],
+            'student.payment_date' => ['required', 'date', 'before_or_equal:today'],
             'botcheck' => ['prohibited'],
         ];
     }

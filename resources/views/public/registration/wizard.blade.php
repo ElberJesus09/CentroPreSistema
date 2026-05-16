@@ -195,6 +195,47 @@
                                 @enderror
                             </div>
                         </div>
+                        <div class="grid gap-6 border-t border-outline-variant/50 pt-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)] lg:items-start">
+                            <div>
+                                <div class="mb-4 flex items-center gap-3">
+                                    <div class="rounded-lg bg-primary-fixed p-2">
+                                        <span class="material-symbols-outlined text-primary">receipt_long</span>
+                                    </div>
+                                    <h3 class="font-display text-lg font-semibold text-primary">Datos del pago</h3>
+                                </div>
+                                <div class="grid gap-5 sm:grid-cols-2">
+                                    <x-input
+                                        label="Número de voucher"
+                                        name="student[payment_voucher_number]"
+                                        :value="data_get($draft, 'student.payment_voucher_number')"
+                                        inputmode="numeric"
+                                        placeholder="1742..."
+                                    />
+                                    <x-input
+                                        label="Número de agencia"
+                                        name="student[payment_agency_number]"
+                                        :value="data_get($draft, 'student.payment_agency_number')"
+                                        inputmode="numeric"
+                                        maxlength="4"
+                                        placeholder="0230"
+                                    />
+                                    <x-input
+                                        label="Fecha del pago"
+                                        name="student[payment_date]"
+                                        type="date"
+                                        :value="data_get($draft, 'student.payment_date')"
+                                    />
+                                </div>
+                            </div>
+                            <div class="overflow-hidden rounded-lg border border-outline-variant/50 bg-surface-container-low">
+                                <img
+                                    src="{{ asset('images/public/vaucher.png') }}"
+                                    alt="Ejemplo de voucher con número de voucher, agencia y fecha de pago"
+                                    class="h-auto w-full object-contain"
+                                    loading="lazy"
+                                >
+                            </div>
+                        </div>
                         <div class="flex flex-wrap justify-end gap-3 border-t border-outline-variant/50 pt-6">
                             <x-button type="submit" variant="primary" class="gap-2 rounded-lg px-8 shadow-md">
                                 Continuar
@@ -241,6 +282,16 @@
                                 <span class="text-on-surface-variant">
                                     {{ $previewSchedule?->academicCycle?->name }} — {{ $previewSchedule?->campus?->name }} —
                                     {{ $previewSchedule?->shift?->name }}
+                                </span>
+                            </dd>
+                        </div>
+                        <div class="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4 sm:col-span-2">
+                            <dt class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Pago</dt>
+                            <dd class="mt-2 text-on-surface">
+                                Voucher {{ data_get($draft, 'student.payment_voucher_number') }}
+                                <br />
+                                <span class="text-on-surface-variant">
+                                    Agencia {{ data_get($draft, 'student.payment_agency_number') }} — Fecha {{ data_get($draft, 'student.payment_date') }}
                                 </span>
                             </dd>
                         </div>

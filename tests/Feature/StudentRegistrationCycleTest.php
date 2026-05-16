@@ -21,6 +21,9 @@ function registrationPayload(int $scheduleId, int $careerId, string $dni): array
             'phone' => '987654321',
             'address' => 'Av. Principal 123',
             'email' => "ana{$scheduleId}@example.test",
+            'payment_voucher_number' => $dni.$scheduleId,
+            'payment_agency_number' => '0230',
+            'payment_date' => '2026-01-15',
         ],
         'guardian' => [
             'first_name' => 'Maria',

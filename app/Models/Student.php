@@ -17,6 +17,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'phone',
     'address',
     'email',
+    'payment_voucher_number',
+    'payment_agency_number',
+    'payment_date',
     'registration_date',
     'guardian_id',
     'school_id',
@@ -100,6 +103,7 @@ class Student extends Model
     {
         return [
             'birth_date' => 'date',
+            'payment_date' => 'date',
             'registration_date' => 'date',
         ];
     }

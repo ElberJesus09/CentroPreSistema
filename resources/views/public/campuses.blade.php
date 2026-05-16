@@ -26,7 +26,7 @@
             >
                 <div class="relative aspect-video overflow-hidden">
                     <img
-                        src="https://images.unsplash.com/photo-1564981797816-1043664bf78d?auto=format&fit=crop&w=1200&q=80"
+                        src="{{ asset('images/public/sedes-principal.png') }}"
                         alt="Campus {{ $first->name }}"
                         class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                         loading="lazy"
@@ -69,14 +69,6 @@
                     <article
                         class="group overflow-hidden rounded-xl border border-transparent bg-surface-container-lowest shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition hover:border-primary"
                     >
-                        <div class="relative h-48 overflow-hidden">
-                            <img
-                                src="https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?auto=format&fit=crop&w=800&q=80"
-                                alt="{{ $campus->name }}"
-                                class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                                loading="lazy"
-                            />
-                        </div>
                         <div class="p-6">
                             <div class="mb-2 flex items-center gap-2 text-primary">
                                 <span class="material-symbols-outlined">school</span>
@@ -127,19 +119,17 @@
                 </ul>
             </div>
             <div class="relative aspect-square w-full flex-1 overflow-hidden rounded-2xl border-4 border-surface-container-lowest bg-surface-variant shadow-xl md:aspect-video">
-                <img
-                    src="https://images.unsplash.com/photo-1524661135-423995f22d0f?auto=format&fit=crop&w=1000&q=80"
-                    alt="Mapa ilustrativo de ubicación"
-                    class="h-full w-full object-cover opacity-90"
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d832.8989196118165!2d-79.84621234365474!3d-6.7750537240223245!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x904cef26c7cf7125%3A0xb25f96c9c4a3c9d4!2sCentro%20Preuniversitario%20%22Francisco%20Aguinaga%20Castro%22!5e0!3m2!1ses!2spe!4v1778890974801!5m2!1ses!2spe"
+                    width="600"
+                    height="450"
+                    style="border:0;"
+                    allowfullscreen=""
                     loading="lazy"
-                />
-                <div class="absolute inset-0 flex items-center justify-center bg-primary/10">
-                    <div class="rounded-xl border border-outline-variant bg-white/90 p-6 text-center shadow-lg backdrop-blur-sm">
-                        <span class="material-symbols-outlined text-4xl text-primary">map</span>
-                        <p class="mt-2 text-sm font-bold text-primary">Ubicación en mapa</p>
-                        <p class="mt-1 text-xs text-on-surface-variant">Use la dirección indicada en su navegador favorito</p>
-                    </div>
-                </div>
+                    referrerpolicy="no-referrer-when-downgrade"
+                    class="h-full w-full"
+                    title="Mapa del Centro Preuniversitario Francisco Aguinaga Castro"
+                ></iframe>
             </div>
         </section>
     @endif

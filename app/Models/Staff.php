@@ -72,6 +72,12 @@ class Staff extends Authenticatable
         ], true);
     }
 
+    /** Modulo reportes: solo administradores. */
+    public function canAccessReportsModule(): bool
+    {
+        return $this->isSuperAdmin() || $this->isAdmin();
+    }
+
     protected function casts(): array
     {
         return [

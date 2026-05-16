@@ -94,6 +94,45 @@
 
     <section>
         <h2 class="mb-4 border-b border-outline-variant/50 pb-2 text-sm font-bold uppercase tracking-wide text-on-surface-variant">
+            Datos del pago
+        </h2>
+        <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)] lg:items-start">
+            <div class="grid gap-4 sm:grid-cols-2">
+                <x-input
+                    label="Número de voucher"
+                    name="student[payment_voucher_number]"
+                    :value="$student?->payment_voucher_number ?? ''"
+                    inputmode="numeric"
+                    placeholder="1742..."
+                />
+                <x-input
+                    label="Número de agencia"
+                    name="student[payment_agency_number]"
+                    :value="$student?->payment_agency_number ?? ''"
+                    inputmode="numeric"
+                    maxlength="4"
+                    placeholder="0230"
+                />
+                <x-input
+                    label="Fecha del pago"
+                    name="student[payment_date]"
+                    type="date"
+                    :value="$student?->payment_date?->format('Y-m-d') ?? ''"
+                />
+            </div>
+            <div class="overflow-hidden rounded-lg border border-outline-variant/50 bg-surface-container-low">
+                <img
+                    src="{{ asset('images/public/vaucher.png') }}"
+                    alt="Ejemplo de voucher con número de voucher, agencia y fecha de pago"
+                    class="h-auto w-full object-contain"
+                    loading="lazy"
+                >
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2 class="mb-4 border-b border-outline-variant/50 pb-2 text-sm font-bold uppercase tracking-wide text-on-surface-variant">
             Datos académicos
         </h2>
         <div class="grid gap-4 sm:grid-cols-2">

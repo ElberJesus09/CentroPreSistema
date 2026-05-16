@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAcademicCyclesModuleAccess;
+use App\Http\Middleware\EnsureReportsModuleAccess;
 use App\Http\Middleware\EnsureStaffModuleAccess;
 use App\Http\Middleware\EnsureStudentsModuleAccess;
 use Illuminate\Foundation\Application;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'staff.module' => EnsureStaffModuleAccess::class,
             'academic-cycles.module' => EnsureAcademicCyclesModuleAccess::class,
             'students.module' => EnsureStudentsModuleAccess::class,
+            'reports.module' => EnsureReportsModuleAccess::class,
         ]);
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo(fn () => route('dashboard'));

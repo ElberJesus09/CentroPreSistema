@@ -27,6 +27,15 @@ trait ValidatesStudentRegistrationPayload
             'student.phone' => ['required', 'digits:9'],
             'student.address' => ['required', 'string', 'max:500'],
             'student.email' => ['required', 'email:rfc', 'max:255'],
+            'student.payment_voucher_number' => [
+                'required',
+                'string',
+                'max:40',
+                'regex:/^\d+$/',
+                $this->uniquePaymentVoucherNumber($ignoreStudentId),
+            ],
+            'student.payment_agency_number' => ['required', 'digits:4'],
+            'student.payment_date' => ['required', 'date', 'before_or_equal:today'],
 
             'guardian.first_name' => ['required', 'string', 'max:120'],
             'guardian.last_name' => ['required', 'string', 'max:120'],
@@ -105,6 +114,13 @@ trait ValidatesStudentRegistrationPayload
 
         $rule = Rule::unique('students', 'dni')
             ->where('academic_cycle_id', $cycleId);
+
+        return $ignoreStudentId === null ? $rule : $rule->ignore($ignoreStudentId);
+    }
+
+    private function uniquePaymentVoucherNumber(?int $ignoreStudentId = null): mixed
+    {
+        $rule = Rule::unique('students', 'payment_voucher_number');
 
         return $ignoreStudentId === null ? $rule : $rule->ignore($ignoreStudentId);
     }

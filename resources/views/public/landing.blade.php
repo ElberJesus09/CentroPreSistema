@@ -30,7 +30,7 @@
             <div class="relative p-6 pb-12 lg:p-10 lg:pb-16">
                 <div class="relative aspect-square w-full overflow-hidden rounded-xxl shadow-xl md:aspect-[4/5]">
                     <img
-                        src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80"
+                        src="{{ asset('images/public/inicio-hero.png') }}"
                         alt="Estudiantes en un campus universitario"
                         class="h-full w-full object-cover"
                         width="800"
@@ -94,14 +94,14 @@
     <section class="mt-12 grid gap-10 lg:grid-cols-2 lg:items-center">
         <div class="order-2 grid grid-cols-2 gap-4 lg:order-1">
             <img
-                src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=600&q=80"
-                alt="Estudiantes en biblioteca"
+                src="{{ asset('images/public/inicio-centropre.png') }}"
+                alt="Centro preuniversitario"
                 class="aspect-square w-full rounded-xl object-cover shadow-md"
                 loading="lazy"
             />
             <img
-                src="https://images.unsplash.com/photo-1541339907198-e08756dedf13?auto=format&fit=crop&w=600&q=80"
-                alt="Campus universitario"
+                src="{{ asset('images/public/inicio-alumnos.png') }}"
+                alt="Alumnos del centro preuniversitario"
                 class="mt-8 aspect-[3/4] w-full rounded-xl object-cover shadow-md"
                 loading="lazy"
             />

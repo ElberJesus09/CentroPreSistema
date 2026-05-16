@@ -99,6 +99,18 @@
                     <dt class="font-semibold text-on-surface-variant">Fecha registro</dt>
                     <dd class="mt-1 text-on-surface">{{ $student->registration_date?->format('Y-m-d') }}</dd>
                 </div>
+                <div>
+                    <dt class="font-semibold text-on-surface-variant">Voucher</dt>
+                    <dd class="mt-1 text-on-surface">{{ $student->payment_voucher_number ?? '---' }}</dd>
+                </div>
+                <div>
+                    <dt class="font-semibold text-on-surface-variant">Agencia</dt>
+                    <dd class="mt-1 text-on-surface">{{ $student->payment_agency_number ?? '---' }}</dd>
+                </div>
+                <div>
+                    <dt class="font-semibold text-on-surface-variant">Fecha pago</dt>
+                    <dd class="mt-1 text-on-surface">{{ $student->payment_date?->format('Y-m-d') ?? '---' }}</dd>
+                </div>
             </dl>
         </section>
     </div>

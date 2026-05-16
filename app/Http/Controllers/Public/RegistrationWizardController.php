@@ -129,6 +129,7 @@ class RegistrationWizardController extends Controller
         $validated = $request->validated();
         $draft['career_id'] = (int) $validated['career_id'];
         $draft['academic_cycle_shift_id'] = (int) $validated['academic_cycle_shift_id'];
+        $draft['student'] = array_merge($draft['student'], $validated['student']);
         $request->session()->put(self::SESSION_KEY, $draft);
 
         return redirect()->route('registration.step.show', ['step' => 5]);

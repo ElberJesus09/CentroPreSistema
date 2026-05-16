@@ -26,7 +26,7 @@
                 name="search"
                 type="search"
                 value="{{ $filters['search'] ?? '' }}"
-                placeholder="DNI, alumno, carrera, correo, ciclo o turno"
+                placeholder="DNI, alumno, voucher, carrera, correo, ciclo o turno"
                 class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
         </div>

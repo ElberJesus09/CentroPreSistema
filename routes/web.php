@@ -11,6 +11,7 @@ use App\Http\Controllers\Public\CampusCatalogController;
 use App\Http\Controllers\Public\CareerCatalogController;
 use App\Http\Controllers\Public\PublicHomeController;
 use App\Http\Controllers\Public\RegistrationWizardController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StudentController;
@@ -78,6 +79,11 @@ Route::prefix('admin')->group(function (): void {
             Route::resource('campuses', CampusController::class)->parameters(['campuses' => 'campus'])->except(['show']);
             Route::resource('shifts', ShiftController::class)->except(['show']);
             Route::resource('schedules', AcademicCycleShiftController::class)->parameters(['schedules' => 'schedule'])->except(['index', 'show']);
+        });
+
+        Route::middleware('reports.module')->group(function (): void {
+            Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+            Route::get('reports/students/pdf', [ReportController::class, 'download'])->name('reports.students.pdf');
         });
 
         Route::middleware('students.module')->group(function (): void {

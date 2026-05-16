@@ -14,20 +14,39 @@
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         @foreach ($featuredCareers as $index => $career)
             @php
-                $heroClass = match ($index % 3) {
-                    0 => 'bg-gradient-to-br from-primary to-primary-container',
-                    1 => 'bg-gradient-to-br from-secondary to-secondary-container',
-                    default => 'bg-gradient-to-br from-primary-container to-tertiary',
-                };
+                $careerImages = [
+                    'MED' => 'medicina-humana.png',
+                    'ICV' => 'ingenieria-civil.png',
+                    'ISI' => 'ingenieria-sistemas.png',
+                    'ICI' => 'ingenieria-computacion.png',
+                    'ARC' => 'arquitectura.png',
+                    'MVE' => 'medicina-veterinaria.png',
+                    'DER' => 'derecho.png',
+                    'ENF' => 'enfermeria.png',
+                    'PSI' => 'psicologia.png',
+                    'IAG' => 'ingenieria-agricola.png',
+                ];
+
+                $careerImage = $careerImages[$career->code] ?? null;
             @endphp
             <article
                 class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)]"
             >
-                <div class="relative h-40 {{ $heroClass }}">
-                    <div class="absolute inset-0 flex items-center justify-center opacity-90">
-                        <span class="material-symbols-outlined text-6xl text-on-primary/90">school</span>
-                    </div>
-                    <div class="absolute left-4 top-4 rounded-full bg-secondary-container px-3 py-1 text-xs font-bold text-on-secondary-container">
+                <div class="relative h-40 overflow-hidden bg-surface-variant">
+                    @if ($careerImage)
+                        <img
+                            src="{{ asset('images/careers/'.$careerImage) }}"
+                            alt="{{ $career->name }}"
+                            class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                            loading="lazy"
+                        />
+                    @else
+                        <div class="absolute inset-0 flex items-center justify-center bg-primary-container opacity-90">
+                            <span class="material-symbols-outlined text-6xl text-primary">school</span>
+                        </div>
+                    @endif
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary/45 via-transparent to-transparent"></div>
+                    <div class="absolute left-4 top-4 rounded-full bg-secondary-container px-3 py-1 text-xs font-bold text-on-secondary-container shadow-sm">
                         {{ $career->code }}
                     </div>
                 </div>
