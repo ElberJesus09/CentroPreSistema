@@ -8,6 +8,15 @@
             <h1 class="font-display text-xl font-bold text-primary md:text-2xl">Alumnos</h1>
             <p class="text-sm text-on-surface-variant">Postulantes y matrículas por carrera y turno.</p>
         </div>
+        <div class="flex flex-wrap gap-2">
+            @can('viewAny', \App\Models\Student::class)
+                <a
+                    href="{{ route('students.cards.create') }}"
+                    class="inline-flex items-center justify-center rounded-lg border border-outline-variant px-4 py-2 text-sm font-semibold text-primary hover:bg-surface-container-high"
+                >
+                    Carnets
+                </a>
+            @endcan
         @can('create', \App\Models\Student::class)
             <a
                 href="{{ route('students.create') }}"
@@ -16,6 +25,7 @@
                 Registrar alumno
             </a>
         @endcan
+        </div>
     </div>
 
     <form method="get" action="{{ route('students.index') }}" class="mb-5 grid gap-3 rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-4 shadow-sm md:grid-cols-[minmax(12rem,2fr)_minmax(9rem,1fr)_minmax(12rem,1.4fr)_auto] md:items-end">

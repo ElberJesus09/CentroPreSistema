@@ -23,6 +23,14 @@
                     Descargar PDFs
                 </a>
             @endcan
+            @can('viewAny', \App\Models\Student::class)
+                <a
+                    href="{{ route('students.cards.download', ['student' => $student->id]) }}"
+                    class="inline-flex items-center justify-center rounded-lg border border-outline-variant px-4 py-2 text-sm font-semibold text-primary hover:bg-surface-container-high"
+                >
+                    Carnet PDF
+                </a>
+            @endcan
             @can('resendRegistrationMail', $student)
                 <form method="post" action="{{ route('students.registration-mail.resend', $student) }}">
                     @csrf
@@ -63,7 +71,15 @@
                 </div>
                 <div>
                     <dt class="font-semibold text-on-surface-variant">Estado</dt>
-                    <dd class="mt-1 text-on-surface">{{ ucfirst($student->status) }}</dd>
+                    <dd class="mt-1 text-on-surface">
+                        @if ($student->status === \App\Models\Student::STATUS_ACTIVE)
+                            Activo
+                        @elseif ($student->status === \App\Models\Student::STATUS_REJECTED)
+                            Rechazado
+                        @else
+                            Pendiente
+                        @endif
+                    </dd>
                 </div>
                 <div class="sm:col-span-2">
                     <dt class="font-semibold text-on-surface-variant">Direccion</dt>
@@ -90,10 +106,6 @@
                 <div>
                     <dt class="font-semibold text-on-surface-variant">Turno</dt>
                     <dd class="mt-1 text-on-surface">{{ $student->schedule?->shift?->name ?? '---' }}</dd>
-                </div>
-                <div>
-                    <dt class="font-semibold text-on-surface-variant">Proceso</dt>
-                    <dd class="mt-1 text-on-surface">{{ $student->admissionProcess?->name ?? '---' }}</dd>
                 </div>
                 <div>
                     <dt class="font-semibold text-on-surface-variant">Fecha registro</dt>

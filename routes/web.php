@@ -13,6 +13,7 @@ use App\Http\Controllers\Public\PublicHomeController;
 use App\Http\Controllers\Public\RegistrationWizardController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\StudentCardController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
@@ -95,6 +96,8 @@ Route::prefix('admin')->group(function (): void {
             Route::get('students/{student}/registration-documents/download', [StudentController::class, 'downloadRegistrationDocuments'])
                 ->middleware('throttle:admin-student-documents-download')
                 ->name('students.registration-documents.download');
+            Route::get('students/cards', [StudentCardController::class, 'create'])->name('students.cards.create');
+            Route::get('students/cards/pdf', [StudentCardController::class, 'download'])->name('students.cards.download');
             Route::resource('students', StudentController::class);
         });
     });
