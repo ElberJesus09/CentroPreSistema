@@ -38,9 +38,6 @@
         </div>
         <div class="ml-auto flex items-center gap-4 text-sm text-on-surface-variant">
             <span class="hidden sm:inline">{{ auth()->user()->username }}</span>
-            <span class="hidden rounded-lg bg-surface-container-high px-2 py-0.5 text-xs text-on-surface md:inline">
-                {{ auth()->user()->role?->name ?? 'Sin rol' }}
-            </span>
             <form method="post" action="{{ route('logout') }}" class="inline">
                 @csrf
                 <x-button type="submit" variant="secondary" class="text-xs">

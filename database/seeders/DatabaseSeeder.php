@@ -15,10 +15,8 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             ExamSettingSeeder::class,
             StaffSeeder::class,
-            CampusSeeder::class,
             ShiftSeeder::class,
             CareerSeeder::class,
-            AdmissionProcessSeeder::class,
         ]);
     }
 }
