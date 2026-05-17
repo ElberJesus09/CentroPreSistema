@@ -19,7 +19,7 @@ COPY . .
 RUN composer dump-autoload --no-dev --optimize \
     && php artisan package:discover --ansi
 
-FROM php:8.3-fpm-bookworm
+FROM php:8.4-fpm-bookworm
 
 WORKDIR /var/www/html
 
