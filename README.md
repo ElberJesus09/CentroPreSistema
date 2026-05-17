@@ -18,6 +18,30 @@ php artisan migrate
 php artisan serve
 ```
 
+## Configuración para producción
+
+No subas el archivo `.env` al repositorio. En Railway, VPS o cualquier hosting, configura las variables desde el panel del proveedor.
+
+Variables mínimas recomendadas:
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://tu-dominio-o-url
+```
+
+`APP_DEBUG` debe estar en `false` en producción para no mostrar trazas de error, rutas internas, consultas o detalles sensibles del servidor.
+
+Antes de publicar:
+
+```bash
+php artisan migrate --force
+php artisan db:seed --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
 Ajusta `APP_URL` y la conexión de base de datos en `.env`.
 
 ---
