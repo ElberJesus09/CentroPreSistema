@@ -30,6 +30,7 @@ class StudentCardService
                 'career:id,name,code',
                 'academicCycle:id,name',
                 'schedule:id,academic_cycle_id,shift_id',
+                'schedule.academicCycle:id,name',
                 'schedule.shift:id,name',
             ]);
 
@@ -37,7 +38,7 @@ class StudentCardService
             $query->where(function (Builder $q) use ($specific): void {
                 if (ctype_digit($specific)) {
                     $q->where('dni', $specific)
-                        ->orWhereKey((int) $specific);
+                        ->orWhere($q->getModel()->getQualifiedKeyName(), (int) $specific);
                 } else {
                     $q->whereRaw('1 = 0');
                 }
@@ -60,7 +61,7 @@ class StudentCardService
 
         if ($students->count() > self::MAX_CARDS) {
             throw ValidationException::withMessages([
-                'filters' => ['El reporte supera '.self::MAX_CARDS.' carnets. Use filtros más específicos.'],
+                'filters' => ['El reporte supera '.self::MAX_CARDS.' carnets. Use filtros mas especificos.'],
             ]);
         }
 
@@ -83,6 +84,8 @@ class StudentCardService
         if (! is_dir($directory)) {
             mkdir($directory, 0755, true);
         }
+
+        $this->deleteStaleQrFiles($directory);
 
         $writer = new Writer(new GDLibRenderer(180));
         $cards = [];
@@ -108,6 +111,15 @@ class StudentCardService
         foreach ($cards as $card) {
             if (is_file($card['qr_path'])) {
                 @unlink($card['qr_path']);
+            }
+        }
+    }
+
+    private function deleteStaleQrFiles(string $directory): void
+    {
+        foreach (glob($directory.DIRECTORY_SEPARATOR.'qr-*.png') ?: [] as $path) {
+            if (is_file($path) && filemtime($path) !== false && filemtime($path) < now()->subDay()->getTimestamp()) {
+                @unlink($path);
             }
         }
     }
@@ -141,12 +153,17 @@ class StudentCardService
     {
         return implode("\n", [
             'CPU UNPRG',
-            'Alumno: '.$student->fullName(),
-            'DNI: '.$student->dni,
-            'Turno: '.($student->schedule?->shift?->name ?? '---'),
-            'Carrera: '.($student->career?->name ?? '---'),
-            'Telefono: '.$student->phone,
-            'Correo: '.$student->email,
+            'ALUMNO: '.$this->plainText($student->fullName()),
+            'DNI: '.$this->plainText($student->dni),
+            'TURNO: '.$this->plainText($student->schedule?->shift?->name ?? '---'),
+            'CICLO: '.$this->plainText($student->academicCycle?->name ?? $student->schedule?->academicCycle?->name ?? '---'),
+            'CARRERA: '.$this->plainText($student->career?->name ?? '---'),
+            'CORREO: '.$this->plainText($student->email),
         ]);
+    }
+
+    private function plainText(mixed $value): string
+    {
+        return mb_strtoupper(Str::ascii((string) ($value ?: '---')), 'UTF-8');
     }
 }

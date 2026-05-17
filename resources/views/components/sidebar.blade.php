@@ -52,7 +52,7 @@
                     'text-primary-fixed/90 hover:bg-white/10 hover:text-white' => ! str_starts_with((string) $current, 'exam-settings.'),
                 ])
             >
-                Examen de ingreso
+                Mensaje de correo
             </a>
         @endcan
         @can('viewAny', \App\Models\Student::class)

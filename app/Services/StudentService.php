@@ -301,9 +301,7 @@ class StudentService
         $cycle = $row->academicCycle?->name ?? '—';
         $campus = $row->campus?->name ?? '—';
         $shift = $row->shift?->name ?? '—';
-        $left = max(0, $row->capacity - $row->enrolled);
-
-        return "{$cycle} — {$campus} — {$shift} ({$left} cupos)";
+        return "{$cycle} — {$campus} — {$shift}";
     }
 
     /**

@@ -162,8 +162,7 @@
                 >
                     @foreach ($schedules as $row)
                         @php
-                            $left = max(0, $row->capacity - $row->enrolled);
-                            $label = ($row->academicCycle?->name ?? '—').' — '.($row->campus?->name ?? '—').' — '.($row->shift?->name ?? '—')." ({$left} cupos)";
+                            $label = ($row->academicCycle?->name ?? '—').' — '.($row->campus?->name ?? '—').' — '.($row->shift?->name ?? '—');
                         @endphp
                         <option value="{{ $row->id }}" @selected((string) old('academic_cycle_shift_id', $student?->academic_cycle_shift_id ?? '') === (string) $row->id)>
                             {{ $label }}

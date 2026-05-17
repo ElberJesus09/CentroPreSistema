@@ -26,6 +26,6 @@ class ExamSettingsController extends Controller
         $examSetting->fill($request->validated());
         $examSetting->save();
 
-        return redirect()->route('exam-settings.edit')->with('success', 'Datos del examen actualizados.');
+        return redirect()->route('exam-settings.edit')->with('success', 'Mensaje de correo actualizado.');
     }
 }

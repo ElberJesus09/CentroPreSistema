@@ -23,7 +23,7 @@
                     <tr>
                         <td style="padding:8px 28px 8px 28px;">
                             <div style="border-top:1px solid #e4e4e7;padding-top:16px;">
-                                <p style="margin:0 0 8px 0;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#52525b;">Examen de ingreso</p>
+                                <p style="margin:0 0 8px 0;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#52525b;">Mensaje de correo</p>
                                 <table role="presentation" cellspacing="0" cellpadding="0" style="width:100%;font-size:14px;color:#3f3f46;">
                                     <tr>
                                         <td style="padding:4px 0;width:96px;color:#71717a;">Fecha</td>
