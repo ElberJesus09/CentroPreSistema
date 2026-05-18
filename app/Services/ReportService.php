@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AcademicCycle;
 use App\Models\Career;
+use App\Models\Shift;
 use App\Models\Student;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -14,9 +15,9 @@ class ReportService
     /**
      * @return array<string, mixed>
      */
-    public function summary(?int $year = null, ?int $careerId = null, ?int $academicCycleId = null): array
+    public function summary(?int $year = null, ?int $careerId = null, ?int $academicCycleId = null, ?int $shiftId = null): array
     {
-        $base = $this->filteredStudentQuery($year, $careerId, $academicCycleId);
+        $base = $this->filteredStudentQuery($year, $careerId, $academicCycleId, $shiftId);
 
         return [
             'kpis' => $this->kpis($base),
@@ -58,12 +59,35 @@ class ReportService
             ->get(['id', 'name', 'start_date']);
     }
 
-    private function filteredStudentQuery(?int $year, ?int $careerId, ?int $academicCycleId): Builder
+    /** @return Collection<int, Shift> */
+    public function filterShiftOptions(): Collection
+    {
+        return Shift::query()
+            ->where('status', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
+    /** @return Collection<int, string> */
+    public function studentEmails(?int $year = null, ?int $careerId = null, ?int $academicCycleId = null, ?int $shiftId = null): Collection
+    {
+        return $this->filteredStudentQuery($year, $careerId, $academicCycleId, $shiftId)
+            ->whereNotNull('email')
+            ->orderBy('email')
+            ->pluck('email')
+            ->map(fn ($email) => mb_strtolower(trim((string) $email)))
+            ->filter()
+            ->unique()
+            ->values();
+    }
+
+    private function filteredStudentQuery(?int $year, ?int $careerId, ?int $academicCycleId, ?int $shiftId = null): Builder
     {
         return Student::query()
             ->when($year !== null, fn (Builder $query) => $query->whereBetween('registration_date', ["{$year}-01-01", "{$year}-12-31"]))
             ->when($careerId !== null, fn (Builder $query) => $query->where('career_id', $careerId))
-            ->when($academicCycleId !== null, fn (Builder $query) => $query->where('academic_cycle_id', $academicCycleId));
+            ->when($academicCycleId !== null, fn (Builder $query) => $query->where('academic_cycle_id', $academicCycleId))
+            ->when($shiftId !== null, fn (Builder $query) => $query->whereHas('schedule', fn (Builder $schedule) => $schedule->where('shift_id', $shiftId)));
     }
 
     /**

@@ -12,6 +12,7 @@ class ExamSetting extends Model
         'exam_time',
         'exam_location',
         'institutional_message',
+        'registration_mail_enabled',
     ];
 
     /** Fila unica editable desde administracion. */
@@ -25,6 +26,7 @@ class ExamSetting extends Model
                 'exam_time' => null,
                 'exam_location' => null,
                 'institutional_message' => null,
+                'registration_mail_enabled' => true,
             ],
         );
 
@@ -35,6 +37,7 @@ class ExamSetting extends Model
     {
         return [
             'exam_date' => 'date',
+            'registration_mail_enabled' => 'boolean',
         ];
     }
 }

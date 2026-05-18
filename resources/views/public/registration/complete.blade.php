@@ -16,6 +16,30 @@
             <div class="mt-6 rounded-lg border border-emerald-200/80 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
                 Le enviamos un correo de confirmación con los PDF institucionales y los datos del examen de ingreso.
             </div>
+        @elseif (! empty($summary['document_downloads']) && is_array($summary['document_downloads']))
+            <div class="mt-6 rounded-lg border border-secondary-container/50 bg-secondary-container/20 px-4 py-3 text-sm text-on-secondary-container">
+                {{ e($summary['mail_message'] ?? 'Descargue sus documentos de inscripcion antes de cerrar esta pantalla.') }}
+            </div>
+            <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                @if (! empty($summary['document_downloads']['enrollment_form']))
+                    <a
+                        href="{{ $summary['document_downloads']['enrollment_form'] }}"
+                        class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary shadow-md transition hover:bg-primary-container active:scale-[0.98]"
+                    >
+                        <span class="material-symbols-outlined text-lg">download</span>
+                        Descargar ficha
+                    </a>
+                @endif
+                @if (! empty($summary['document_downloads']['regulations']))
+                    <a
+                        href="{{ $summary['document_downloads']['regulations'] }}"
+                        class="inline-flex items-center justify-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-sm font-semibold text-on-surface transition hover:bg-surface-container-high active:scale-[0.98]"
+                    >
+                        <span class="material-symbols-outlined text-lg">download</span>
+                        Descargar reglamento
+                    </a>
+                @endif
+            </div>
         @elseif (! empty($summary['mail_message']))
             <div class="mt-6 rounded-lg border border-secondary-container/50 bg-secondary-container/20 px-4 py-3 text-sm text-on-secondary-container">
                 {{ e($summary['mail_message']) }}

@@ -28,11 +28,12 @@
         <h1>Reporte de alumnos</h1>
         <div class="meta">
             Generado: {{ $generatedAt->format('Y-m-d H:i') }}
-            @if ($filters['year'] || $filters['career'] || $filters['cycle'])
+            @if ($filters['year'] || $filters['career'] || $filters['cycle'] || $filters['shift'])
                 | Filtros:
                 Año {{ $filters['year'] ?? 'Todos' }},
                 Ciclo {{ $filters['cycle'] ?? 'Todos' }},
-                Carrera {{ $filters['career'] ?? 'Todas' }}
+                Carrera {{ $filters['career'] ?? 'Todas' }},
+                Turno {{ $filters['shift'] ?? 'Todos' }}
             @else
                 | Sin filtros aplicados
             @endif

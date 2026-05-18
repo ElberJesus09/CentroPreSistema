@@ -8,7 +8,9 @@ class UpdateExamSettingsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->canAccessStudentsModule() ?? false;
+        $user = $this->user();
+
+        return $user !== null && ($user->isSuperAdmin() || $user->isAdmin());
     }
 
     /**
@@ -21,6 +23,7 @@ class UpdateExamSettingsRequest extends FormRequest
             'exam_time' => ['nullable', 'string', 'max:64'],
             'exam_location' => ['nullable', 'string', 'max:500'],
             'institutional_message' => ['nullable', 'string', 'max:5000'],
+            'registration_mail_enabled' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -32,6 +35,7 @@ class UpdateExamSettingsRequest extends FormRequest
                 $merge[$key] = trim(strip_tags($this->input($key)));
             }
         }
+        $merge['registration_mail_enabled'] = $this->boolean('registration_mail_enabled');
         $this->merge($merge);
     }
 }

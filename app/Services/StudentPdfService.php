@@ -7,6 +7,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\Response;
 use ZipArchive;
 
 class StudentPdfService
@@ -18,14 +19,7 @@ class StudentPdfService
      */
     public function buildRegistrationAttachmentFiles(Student $student): array
     {
-        $student->loadMissing([
-            'guardian',
-            'school',
-            'career',
-            'schedule.academicCycle',
-            'schedule.campus',
-            'schedule.shift',
-        ]);
+        $this->loadRegistrationRelations($student);
 
         $directory = storage_path('app/tmp/registration-mail');
         if (! is_dir($directory) && ! mkdir($directory, 0755, true) && ! is_dir($directory)) {
@@ -48,6 +42,21 @@ class StudentPdfService
             'enrollment_form' => $enrollmentPath,
             'regulations' => $regulationsPath,
         ];
+    }
+
+    public function downloadRegistrationDocument(Student $student, string $document): Response
+    {
+        $this->loadRegistrationRelations($student);
+
+        [$view, $filename] = match ($document) {
+            'enrollment_form' => ['pdf.enrollment-form', (string) config('student_mail.attachment_enrollment_filename')],
+            'regulations' => ['pdf.institutional-regulations', (string) config('student_mail.attachment_regulations_filename')],
+            default => abort(404),
+        };
+
+        return Pdf::loadView($view, ['student' => $student])
+            ->setPaper('a4')
+            ->download($filename);
     }
 
     /**
@@ -103,5 +112,17 @@ class StudentPdfService
                 @unlink($path);
             }
         }
+    }
+
+    private function loadRegistrationRelations(Student $student): void
+    {
+        $student->loadMissing([
+            'guardian',
+            'school',
+            'career',
+            'schedule.academicCycle',
+            'schedule.campus',
+            'schedule.shift',
+        ]);
     }
 }

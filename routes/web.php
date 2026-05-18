@@ -54,6 +54,11 @@ Route::get('/registration/dni-lookup', [RegistrationWizardController::class, 'lo
 Route::get('/registration/complete', [RegistrationWizardController::class, 'complete'])
     ->name('registration.complete');
 
+Route::get('/registration/documents/{student}/{document}', [RegistrationWizardController::class, 'downloadDocument'])
+    ->whereIn('document', ['enrollment_form', 'regulations'])
+    ->middleware(['signed', 'throttle:public-registration'])
+    ->name('registration.documents.download');
+
 /*
 |--------------------------------------------------------------------------
 | Panel administrativo (/admin)
@@ -85,6 +90,7 @@ Route::prefix('admin')->group(function (): void {
         Route::middleware('reports.module')->group(function (): void {
             Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
             Route::get('reports/students/pdf', [ReportController::class, 'download'])->name('reports.students.pdf');
+            Route::get('reports/students/emails.txt', [ReportController::class, 'downloadEmails'])->name('reports.students.emails');
         });
 
         Route::middleware('students.module')->group(function (): void {

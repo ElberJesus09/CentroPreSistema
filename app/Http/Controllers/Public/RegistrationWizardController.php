@@ -11,12 +11,15 @@ use App\Http\Requests\PublicRegistration\RegistrationStep4Request;
 use App\Models\AcademicCycleShift;
 use App\Models\Career;
 use App\Models\ExamSetting;
+use App\Models\Student;
 use App\Services\PublicRegistrationCompletionService;
+use App\Services\StudentPdfService;
 use App\Services\StudentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class RegistrationWizardController extends Controller
 {
@@ -147,6 +150,7 @@ class RegistrationWizardController extends Controller
             'student_name' => $result->student->fullName(),
             'mail_sent' => $result->mailOutcome->sent,
             'mail_message' => $result->mailOutcome->userMessage,
+            'document_downloads' => $result->documentDownloads,
         ];
 
         return redirect()->route('registration.complete')->with('registration_complete', $flash);
@@ -164,6 +168,11 @@ class RegistrationWizardController extends Controller
             'summary' => $payload,
             'exam' => ExamSetting::singleton(),
         ]);
+    }
+
+    public function downloadDocument(Student $student, string $document, StudentPdfService $studentPdfService): Response
+    {
+        return $studentPdfService->downloadRegistrationDocument($student, $document);
     }
 
     /**

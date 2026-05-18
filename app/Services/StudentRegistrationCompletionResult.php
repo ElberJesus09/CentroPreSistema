@@ -12,5 +12,7 @@ final class StudentRegistrationCompletionResult
     public function __construct(
         public readonly Student $student,
         public readonly StudentMailSendOutcome $mailOutcome,
+        /** @var array<string, string> */
+        public readonly array $documentDownloads = [],
     ) {}
 }

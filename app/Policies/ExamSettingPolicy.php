@@ -9,16 +9,16 @@ class ExamSettingPolicy
 {
     public function viewAny(Staff $user): bool
     {
-        return $user->canAccessStudentsModule();
+        return $user->isSuperAdmin() || $user->isAdmin();
     }
 
     public function view(Staff $user, ExamSetting $examSetting): bool
     {
-        return $user->canAccessStudentsModule();
+        return $user->isSuperAdmin() || $user->isAdmin();
     }
 
     public function update(Staff $user, ExamSetting $examSetting): bool
     {
-        return $user->canAccessStudentsModule();
+        return $user->isSuperAdmin() || $user->isAdmin();
     }
 }

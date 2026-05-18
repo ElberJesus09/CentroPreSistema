@@ -5,7 +5,7 @@
 @section('content')
     <div class="mb-6">
         <h1 class="font-display text-xl font-bold text-primary md:text-2xl">Mensaje de correo</h1>
-        <p class="text-sm text-on-surface-variant">Configure y revise el mensaje que recibira el postulante en su correo de confirmacion.</p>
+        <p class="text-sm text-on-surface-variant">Configure el mensaje del correo y active o desactive el envio automatico al terminar la inscripcion.</p>
     </div>
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]">
@@ -13,6 +13,28 @@
             <form method="post" action="{{ route('exam-settings.update') }}" class="space-y-5">
                 @csrf
                 @method('PUT')
+
+                <div class="rounded-lg border border-outline-variant bg-white p-4">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-on-surface">Envio automatico de correo</p>
+                            <p class="mt-1 text-xs leading-relaxed text-on-surface-variant">
+                                Si esta desactivado, el postulante vera botones para descargar la ficha y el reglamento al finalizar.
+                            </p>
+                        </div>
+                        <label for="registration_mail_enabled" class="inline-flex cursor-pointer items-center gap-3">
+                            <input
+                                type="checkbox"
+                                name="registration_mail_enabled"
+                                id="registration_mail_enabled"
+                                value="1"
+                                @checked(old('registration_mail_enabled', $examSetting->registration_mail_enabled))
+                                class="h-5 w-5 rounded border-outline-variant text-primary focus:ring-primary"
+                            />
+                            <span class="text-sm font-semibold text-on-surface">Activado</span>
+                        </label>
+                    </div>
+                </div>
 
                 <div>
                     <label for="exam_date" class="block text-sm font-semibold text-on-surface-variant">Fecha del examen</label>
@@ -68,6 +90,14 @@
             <div class="mb-5">
                 <h2 class="font-display text-lg font-semibold text-primary">Vista previa del correo</h2>
                 <p class="text-sm text-on-surface-variant">Asi se mostrara la informacion principal dentro del correo de confirmacion.</p>
+            </div>
+
+            <div @class([
+                'mb-5 rounded-lg border px-4 py-3 text-sm',
+                'border-emerald-200 bg-emerald-50 text-emerald-950' => $examSetting->registration_mail_enabled,
+                'border-secondary-container/50 bg-secondary-container/20 text-on-secondary-container' => ! $examSetting->registration_mail_enabled,
+            ])>
+                {{ $examSetting->registration_mail_enabled ? 'El correo automatico esta activado.' : 'El correo automatico esta desactivado; el registro mostrara descargas directas.' }}
             </div>
 
             <div class="overflow-hidden rounded-lg border border-outline-variant bg-white">
