@@ -41,9 +41,11 @@ class StaffController extends Controller
 
     public function edit(Staff $staff, StaffService $staffService): View
     {
+        $staff->load('role');
+
         return view('staff.edit', [
-            'staffMember' => $staff->load('role'),
-            'roles' => $staffService->assignableRolesQuery(auth()->user())->get(),
+            'staffMember' => $staff,
+            'roles' => $staffService->assignableRolesQuery(auth()->user(), $staff)->get(),
         ]);
     }
 

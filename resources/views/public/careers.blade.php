@@ -27,7 +27,21 @@
                     'IAG' => 'ingenieria-agricola.png',
                 ];
 
+                $careerDescriptions = [
+                    'MED' => 'Refuerza biologia, quimica y razonamiento cientifico para postular a una carrera enfocada en el cuidado integral de la salud.',
+                    'ICV' => 'Preparate en matematica, fisica y analisis espacial para disenar soluciones de infraestructura al servicio de la comunidad.',
+                    'ISI' => 'Fortalece logica, algoritmos y pensamiento analitico para crear sistemas que resuelvan problemas reales con tecnologia.',
+                    'ICI' => 'Desarrolla bases en computacion, programacion y redes para construir soluciones digitales seguras y eficientes.',
+                    'ARC' => 'Potencia tu creatividad, geometria y vision espacial para proyectar espacios funcionales, sostenibles y humanos.',
+                    'MVE' => 'Afianza ciencias naturales y vocacion de servicio para cuidar la salud animal y aportar al bienestar productivo y social.',
+                    'DER' => 'Entrena comprension lectora, argumentacion y analisis social para formarte en defensa juridica y justicia publica.',
+                    'ENF' => 'Consolida biologia, comunicacion y criterio humano para una profesion centrada en el cuidado directo de las personas.',
+                    'PSI' => 'Refuerza lectura critica, biologia y ciencias sociales para comprender la conducta y acompanar procesos de cambio.',
+                    'IAG' => 'Preparate en matematica, fisica y ciencias agrarias para optimizar el uso del agua, suelos y tecnologia en el campo.',
+                ];
+
                 $careerImage = $careerImages[$career->code] ?? null;
+                $careerDescription = $careerDescriptions[$career->code] ?? 'Preparate con contenidos clave para postular con mas seguridad a esta carrera de la UNPRG.';
             @endphp
             <article
                 class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)]"
@@ -53,7 +67,7 @@
                 <div class="flex flex-1 flex-col p-6">
                     <h2 class="font-display text-xl font-bold text-primary">{{ $career->name }}</h2>
                     <p class="mt-2 flex-1 text-sm leading-relaxed text-on-surface-variant">
-                        Carrera oficial UNPRG con preparación orientada al examen de admisión.
+                        {{ $careerDescription }}
                     </p>
                     <a
                         href="{{ route('registration.start') }}"

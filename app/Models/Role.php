@@ -22,6 +22,38 @@ class Role extends Model
         'status',
     ];
 
+    /** Nombre legible para mostrar en la interfaz. */
+    public function displayName(): string
+    {
+        return match ($this->name) {
+            self::NAME_SUPER_ADMIN => 'Super administrador',
+            self::NAME_ADMIN => 'Administrador',
+            self::NAME_TRABAJADOR => 'Trabajador',
+            default => $this->name,
+        };
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function assignableNamesForActor(?Staff $actor): array
+    {
+        if ($actor?->isSuperAdmin()) {
+            return [
+                self::NAME_ADMIN,
+                self::NAME_TRABAJADOR,
+            ];
+        }
+
+        if ($actor?->isAdmin()) {
+            return [
+                self::NAME_TRABAJADOR,
+            ];
+        }
+
+        return [];
+    }
+
     /**
      * @return HasMany<Staff, $this>
      */

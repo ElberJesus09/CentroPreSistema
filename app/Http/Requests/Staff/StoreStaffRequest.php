@@ -36,12 +36,8 @@ class StoreStaffRequest extends FormRequest
 
     private function assignableRoleRule(): mixed
     {
-        $allowed = $this->user()?->isSuperAdmin()
-            ? [Role::NAME_SUPER_ADMIN, Role::NAME_ADMIN, Role::NAME_TRABAJADOR]
-            : [Role::NAME_ADMIN, Role::NAME_TRABAJADOR];
-
         return Rule::exists('roles', 'id')
             ->where('status', true)
-            ->whereIn('name', $allowed);
+            ->whereIn('name', Role::assignableNamesForActor($this->user()));
     }
 }

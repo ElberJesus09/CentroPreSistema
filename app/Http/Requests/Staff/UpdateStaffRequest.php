@@ -52,9 +52,17 @@ class UpdateStaffRequest extends FormRequest
 
     private function assignableRoleRule(): mixed
     {
-        $allowed = $this->user()?->isSuperAdmin()
-            ? [Role::NAME_SUPER_ADMIN, Role::NAME_ADMIN, Role::NAME_TRABAJADOR]
-            : [Role::NAME_ADMIN, Role::NAME_TRABAJADOR];
+        /** @var Staff $staff */
+        $staff = $this->route('staff');
+        $allowed = Role::assignableNamesForActor($this->user());
+
+        if (
+            $this->user()?->isSuperAdmin()
+            && $staff->role?->name === Role::NAME_SUPER_ADMIN
+            && ! in_array(Role::NAME_SUPER_ADMIN, $allowed, true)
+        ) {
+            $allowed[] = Role::NAME_SUPER_ADMIN;
+        }
 
         return Rule::exists('roles', 'id')
             ->where('status', true)

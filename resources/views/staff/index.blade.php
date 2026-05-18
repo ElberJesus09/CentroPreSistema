@@ -51,7 +51,7 @@
                             <td class="whitespace-nowrap px-4 py-3">{{ $row->phone }}</td>
                             <td class="px-4 py-3">{{ $row->email }}</td>
                             <td class="whitespace-nowrap px-4 py-3">{{ $row->username }}</td>
-                            <td class="whitespace-nowrap px-4 py-3">{{ $row->role?->name }}</td>
+                            <td class="whitespace-nowrap px-4 py-3">{{ $row->role?->displayName() ?? 'Sin rol' }}</td>
                             <td class="whitespace-nowrap px-4 py-3">
                                 @if ($row->status)
                                     <span class="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-800">
