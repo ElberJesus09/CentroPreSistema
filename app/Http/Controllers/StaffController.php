@@ -19,7 +19,7 @@ class StaffController extends Controller
     public function index(StaffService $staffService): View
     {
         return view('staff.index', [
-            'staffList' => $staffService->paginateIndex(),
+            'staffList' => $staffService->paginateIndex(auth()->user()),
         ]);
     }
 

@@ -10,10 +10,17 @@ use Illuminate\Database\Eloquent\Builder;
 class StaffService
 {
     /** Listado paginado para administracion. */
-    public function paginateIndex(int $perPage = 15): LengthAwarePaginator
+    public function paginateIndex(?Staff $actor = null, int $perPage = 15): LengthAwarePaginator
     {
         return Staff::query()
             ->with('role')
+            ->when(
+                ! $actor?->isSuperAdmin(),
+                fn (Builder $query) => $query->whereDoesntHave(
+                    'role',
+                    fn (Builder $query) => $query->where('name', Role::NAME_SUPER_ADMIN)
+                )
+            )
             ->orderByDesc('id')
             ->paginate($perPage);
     }

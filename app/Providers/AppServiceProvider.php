@@ -2,7 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\AcademicCycle;
 use App\Models\AcademicCycleShift;
+use App\Models\Campus;
+use App\Models\ExamSetting;
+use App\Models\Shift;
+use App\Models\Staff;
+use App\Models\Student;
+use App\Observers\ActivityLogObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -31,6 +38,14 @@ class AppServiceProvider extends ServiceProvider
 
         // Parametro {schedule} en rutas del modulo academic cycles.
         Route::bind('schedule', fn (string $value) => AcademicCycleShift::query()->whereKey($value)->firstOrFail());
+
+        Staff::observe(ActivityLogObserver::class);
+        Student::observe(ActivityLogObserver::class);
+        AcademicCycle::observe(ActivityLogObserver::class);
+        Campus::observe(ActivityLogObserver::class);
+        Shift::observe(ActivityLogObserver::class);
+        AcademicCycleShift::observe(ActivityLogObserver::class);
+        ExamSetting::observe(ActivityLogObserver::class);
 
         $this->configureRegistrationRateLimiters();
     }

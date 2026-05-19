@@ -69,3 +69,29 @@ test('admin cannot create another admin by posting directly', function () {
 
     $response->assertSessionHasErrors('role_id');
 });
+
+test('admin does not see super admin in staff list', function () {
+    $superAdminRole = createRole(Role::NAME_SUPER_ADMIN);
+    $adminRole = createRole(Role::NAME_ADMIN);
+    createRole(Role::NAME_TRABAJADOR);
+    createStaffWithRole($superAdminRole, 'hidden-superadmin-list-test');
+    $admin = createStaffWithRole($adminRole, 'admin-list-test');
+
+    $response = $this->actingAs($admin)->get(route('staff.index'));
+
+    $response->assertOk()
+        ->assertSee('admin-list-test')
+        ->assertDontSee('hidden-superadmin-list-test');
+});
+
+test('super admin sees super admin in staff list', function () {
+    $superAdminRole = createRole(Role::NAME_SUPER_ADMIN);
+    createRole(Role::NAME_ADMIN);
+    createRole(Role::NAME_TRABAJADOR);
+    $superAdmin = createStaffWithRole($superAdminRole, 'visible-superadmin-list-test');
+
+    $response = $this->actingAs($superAdmin)->get(route('staff.index'));
+
+    $response->assertOk()
+        ->assertSee('visible-superadmin-list-test');
+});

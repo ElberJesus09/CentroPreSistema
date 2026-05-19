@@ -91,6 +91,7 @@ Route::prefix('admin')->group(function (): void {
             Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
             Route::get('reports/students/pdf', [ReportController::class, 'download'])->name('reports.students.pdf');
             Route::get('reports/students/emails.txt', [ReportController::class, 'downloadEmails'])->name('reports.students.emails');
+            Route::get('reports/activity/pdf', [ReportController::class, 'downloadActivity'])->name('reports.activity.pdf');
         });
 
         Route::middleware('students.module')->group(function (): void {

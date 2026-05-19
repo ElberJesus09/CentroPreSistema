@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\ActivityLogService;
 use App\Services\StaffService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,7 @@ class LoginController extends Controller
         return view('auth.login');
     }
 
-    public function store(LoginRequest $request, StaffService $staffService): RedirectResponse
+    public function store(LoginRequest $request, StaffService $staffService, ActivityLogService $activityLogService): RedirectResponse
     {
         $staff = $staffService->findActiveByUsername($request->validated('username'));
 
@@ -36,6 +37,7 @@ class LoginController extends Controller
         Auth::login($staff, $request->boolean('remember'));
         $request->session()->regenerate();
         $staffService->recordLogin($staff);
+        $activityLogService->record('auth', 'login', 'Inicio sesion en el panel administrativo.', staff: $staff, request: $request);
 
         return redirect()->intended(route('dashboard'));
     }
