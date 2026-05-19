@@ -57,16 +57,37 @@
                             </a>
                         @endcan
                         @can('delete', $row)
-                            <form
-                                method="post"
-                                action="{{ route('academic-cycles.campuses.destroy', $row) }}"
-                                class="inline"
-                                onsubmit="return confirm('Eliminar esta sede?');"
+                            <button
+                                type="button"
+                                class="text-sm font-medium text-red-600 hover:underline"
+                                onclick="document.getElementById('campus-delete-{{ $row->id }}').showModal()"
                             >
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-sm font-medium text-red-600 hover:underline">Eliminar</button>
-                            </form>
+                                Eliminar
+                            </button>
+                            <x-modal
+                                id="campus-delete-{{ $row->id }}"
+                                title="Eliminar sede"
+                                description="Esta accion no se puede deshacer."
+                                variant="danger"
+                            >
+                                <p>Eliminaras la sede <strong>{{ $row->name }}</strong>.</p>
+                                <p class="mt-2 text-on-surface-variant">No podra eliminarse si esta asignada en programaciones.</p>
+
+                                <x-slot:actions>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                                        onclick="this.closest('dialog').close()"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <form method="post" action="{{ route('academic-cycles.campuses.destroy', $row) }}" class="contents">
+                                        @csrf
+                                        @method('DELETE')
+                                        <x-button type="submit" variant="danger">Confirmar eliminacion</x-button>
+                                    </form>
+                                </x-slot:actions>
+                            </x-modal>
                         @endcan
                     </td>
                 </tr>

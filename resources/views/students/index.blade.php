@@ -143,14 +143,29 @@
                             >
                                 Eliminar
                             </button>
-                            <x-modal id="student-delete-{{ $row->id }}" title="Eliminar alumno">
-                                <p class="mt-3 text-sm text-on-surface">¿Eliminar a <strong>{{ $row->fullName() }}</strong>? Se liberará el cupo del turno.</p>
-                                <p class="mt-2 text-sm text-on-surface-variant">Esta acción no eliminará colegios o apoderados que todavía estén vinculados a otros alumnos.</p>
-                                <form method="post" action="{{ route('students.destroy', $row) }}" class="mt-4 flex gap-2">
-                                    @csrf
-                                    @method('DELETE')
-                                    <x-button type="submit" variant="danger">Confirmar eliminación</x-button>
-                                </form>
+                            <x-modal
+                                id="student-delete-{{ $row->id }}"
+                                title="Eliminar alumno"
+                                description="Esta accion no se puede deshacer."
+                                variant="danger"
+                            >
+                                <p>Eliminaras a <strong>{{ $row->fullName() }}</strong> y se liberara el cupo del turno.</p>
+                                <p class="mt-2 text-on-surface-variant">No se eliminaran colegios o apoderados que todavia esten vinculados a otros alumnos.</p>
+
+                                <x-slot:actions>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                                        onclick="this.closest('dialog').close()"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <form method="post" action="{{ route('students.destroy', $row) }}" class="contents">
+                                        @csrf
+                                        @method('DELETE')
+                                        <x-button type="submit" variant="danger">Confirmar eliminacion</x-button>
+                                    </form>
+                                </x-slot:actions>
                             </x-modal>
                         @endcan
                     </td>
