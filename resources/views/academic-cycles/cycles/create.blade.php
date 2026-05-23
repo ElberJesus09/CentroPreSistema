@@ -7,7 +7,7 @@
 
     <div class="mb-6">
         <a href="{{ route('academic-cycles.cycles.index') }}" class="text-sm font-medium text-brand hover:underline">Volver al listado</a>
-        <h1 class="mt-2 text-xl font-semibold text-neutral-900">Nuevo ciclo academico</h1>
+        <h1 class="mt-2 text-xl font-semibold text-neutral-900">Nuevo ciclo académico</h1>
     </div>
 
     <form

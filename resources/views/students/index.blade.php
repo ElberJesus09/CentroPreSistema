@@ -146,7 +146,7 @@
                             <x-modal
                                 id="student-delete-{{ $row->id }}"
                                 title="Eliminar alumno"
-                                description="Esta accion no se puede deshacer."
+                                description="Esta acción no se puede deshacer."
                                 variant="danger"
                             >
                                 <p>Eliminaras a <strong>{{ $row->fullName() }}</strong> y se liberara el cupo del turno.</p>

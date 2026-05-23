@@ -33,7 +33,7 @@ class AcademicCycleController extends Controller
     {
         $academicCycleService->createCycle($request->validated());
 
-        return redirect()->route('academic-cycles.cycles.index')->with('success', 'Ciclo academico creado correctamente.');
+        return redirect()->route('academic-cycles.cycles.index')->with('success', 'Ciclo académico creado correctamente.');
     }
 
     public function edit(AcademicCycle $academic_cycle): View
@@ -47,7 +47,7 @@ class AcademicCycleController extends Controller
     {
         $academicCycleService->updateCycle($academic_cycle, $request->validated());
 
-        return redirect()->route('academic-cycles.cycles.index')->with('success', 'Ciclo academico actualizado correctamente.');
+        return redirect()->route('academic-cycles.cycles.index')->with('success', 'Ciclo académico actualizado correctamente.');
     }
 
     public function destroy(AcademicCycle $academic_cycle, AcademicCycleService $academicCycleService): RedirectResponse
@@ -58,6 +58,6 @@ class AcademicCycleController extends Controller
             return redirect()->route('academic-cycles.cycles.index')->withErrors($e->errors());
         }
 
-        return redirect()->route('academic-cycles.cycles.index')->with('success', 'Ciclo academico eliminado correctamente.');
+        return redirect()->route('academic-cycles.cycles.index')->with('success', 'Ciclo académico eliminado correctamente.');
     }
 }

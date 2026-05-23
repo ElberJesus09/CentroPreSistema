@@ -22,10 +22,10 @@ class ActivityLog extends Model
 {
     /** @var array<string, string> */
     private const FIELD_LABELS = [
-        'academic_cycle_id' => 'Ciclo academico',
-        'academic_cycle_shift_id' => 'Programacion',
-        'address' => 'Direccion',
-        'admission_process_id' => 'Proceso de admision',
+        'academic_cycle_id' => 'Ciclo académico',
+        'academic_cycle_shift_id' => 'Programación',
+        'address' => 'Dirección',
+        'admission_process_id' => 'Proceso de admisión',
         'birth_date' => 'Fecha de nacimiento',
         'campus_id' => 'Sede',
         'capacity' => 'Capacidad',
@@ -37,7 +37,7 @@ class ActivityLog extends Model
         'exam_location' => 'Lugar de examen',
         'exam_time' => 'Hora de examen',
         'first_name' => 'Nombres',
-        'gender' => 'Genero',
+        'gender' => 'Género',
         'guardian_id' => 'Apoderado',
         'institutional_message' => 'Mensaje institucional',
         'last_name' => 'Apellido paterno',
@@ -48,7 +48,7 @@ class ActivityLog extends Model
         'payment_voucher_number' => 'Voucher de pago',
         'phone' => 'Celular',
         'registration_date' => 'Fecha de registro',
-        'registration_mail_enabled' => 'Envio de correo',
+        'registration_mail_enabled' => 'Envío de correo',
         'role_id' => 'Rol',
         'school_id' => 'Colegio',
         'shift_id' => 'Turno',

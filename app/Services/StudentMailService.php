@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 /**
- * Envio SMTP de confirmacion de inscripcion (Resend) con PDFs adjuntos.
+ * Envío SMTP de confirmación de inscripción (Resend) con PDFs adjuntos.
  * Cola futura: ver SendRegistrationConfirmationJob y config('student_mail.queue_enabled').
  */
 class StudentMailService
@@ -59,7 +59,7 @@ class StudentMailService
                 $student,
                 $channel,
                 $actor,
-                'Invalid student email address.',
+                'Dirección de correo del alumno no válida.',
                 ['recipient' => $email],
                 'La dirección de correo del postulante no es válida.',
             );
@@ -73,7 +73,7 @@ class StudentMailService
                     $student,
                     $channel,
                     $actor,
-                    'PDF attachments missing or empty.',
+                    'No se generaron los documentos PDF adjuntos.',
                     [],
                     'No se pudieron generar los documentos PDF. Inténtelo más tarde o contacte a secretaría.',
                 );

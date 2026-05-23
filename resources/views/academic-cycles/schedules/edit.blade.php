@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Editar programacion | '.config('app.name'))
+@section('title', 'Editar programación | '.config('app.name'))
 
 @section('content')
     <x-academic.nav section="schedules" />
 
     <div class="mb-6">
         <a href="{{ route('academic-cycles.index') }}" class="text-sm font-medium text-brand hover:underline">Volver al listado</a>
-        <h1 class="mt-2 text-xl font-semibold text-neutral-900">Editar programacion</h1>
-        <p class="text-sm text-neutral-600">ID {{ $schedule->id }} — ajuste capacidad o matriculados sin superar el limite.</p>
+        <h1 class="mt-2 text-xl font-semibold text-neutral-900">Editar programación</h1>
+        <p class="text-sm text-neutral-600">ID {{ $schedule->id }} - ajuste capacidad o matriculados sin superar el límite.</p>
     </div>
 
     <form
@@ -20,7 +20,7 @@
         @method('PUT')
         <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1 sm:col-span-2">
-                <label for="academic_cycle_id" class="block text-sm font-medium text-neutral-800">Ciclo academico</label>
+                <label for="academic_cycle_id" class="block text-sm font-medium text-neutral-800">Ciclo académico</label>
                 <select
                     id="academic_cycle_id"
                     name="academic_cycle_id"
@@ -70,7 +70,7 @@
                     <p class="text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
-            <x-input label="Capacidad maxima" name="capacity" type="number" :value="old('capacity', $schedule->capacity)" />
+            <x-input label="Capacidad máxima" name="capacity" type="number" :value="old('capacity', $schedule->capacity)" />
             <x-input label="Matriculados actuales" name="enrolled" type="number" :value="old('enrolled', $schedule->enrolled)" />
             <div class="space-y-1 sm:col-span-2">
                 <label for="status" class="block text-sm font-medium text-neutral-800">Estado</label>

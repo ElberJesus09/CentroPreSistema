@@ -15,12 +15,12 @@
             <x-input label="Nombres" name="first_name" :value="old('first_name')" />
             <x-input label="Apellido paterno" name="last_name" :value="old('last_name')" />
             <x-input label="Apellido materno" name="mother_last_name" :value="old('mother_last_name')" />
-            <x-input label="DNI (8 digitos)" name="dni" :value="old('dni')" />
-            <x-input label="Celular (9 digitos)" name="phone" :value="old('phone')" />
+            <x-input label="DNI (8 dígitos)" name="dni" :value="old('dni')" />
+            <x-input label="Celular (9 dígitos)" name="phone" :value="old('phone')" />
             <x-input label="Correo" name="email" type="email" :value="old('email')" />
             <x-input label="Usuario" name="username" :value="old('username')" autocomplete="username" />
             <x-input label="Contrasena" name="password" type="password" autocomplete="new-password" />
-            <x-input label="Confirmar contrasena" name="password_confirmation" type="password" autocomplete="new-password" />
+            <x-input label="Confirmar contraseña" name="password_confirmation" type="password" autocomplete="new-password" />
         </div>
         <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1">

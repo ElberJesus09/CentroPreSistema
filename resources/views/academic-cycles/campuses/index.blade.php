@@ -67,7 +67,7 @@
                             <x-modal
                                 id="campus-delete-{{ $row->id }}"
                                 title="Eliminar sede"
-                                description="Esta accion no se puede deshacer."
+                                description="Esta acción no se puede deshacer."
                                 variant="danger"
                             >
                                 <p>Eliminaras la sede <strong>{{ $row->name }}</strong>.</p>

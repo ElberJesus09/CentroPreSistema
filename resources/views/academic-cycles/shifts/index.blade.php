@@ -65,7 +65,7 @@
                             <x-modal
                                 id="shift-delete-{{ $row->id }}"
                                 title="Eliminar turno"
-                                description="Esta accion no se puede deshacer."
+                                description="Esta acción no se puede deshacer."
                                 variant="danger"
                             >
                                 <p>Eliminaras el turno <strong>{{ $row->name }}</strong>.</p>

@@ -95,7 +95,7 @@ class GradeService
     {
         $report = $this->analyzeGradeRows($academicCycleId, $rows, true, $staff);
 
-        Log::info('Importacion masiva de notas', ['staff_id' => $staff->id, 'academic_cycle_id' => $academicCycleId, 'report' => $report]);
+        Log::info('Importación masiva de notas', ['staff_id' => $staff->id, 'academic_cycle_id' => $academicCycleId, 'report' => $report]);
 
         return $report;
     }
@@ -141,13 +141,13 @@ class GradeService
                     continue;
                 }
                 if ($student->status !== Student::STATUS_ACTIVE) {
-                    $report['errores'][] = "Fila {$line}: el alumno con DNI {$dni} no esta activo. Solo se importan notas para alumnos activos.";
+                    $report['errores'][] = "Fila {$line}: el alumno con DNI {$dni} no está activo. Solo se importan notas para alumnos activos.";
                     continue;
                 }
 
                 $evaluation = $evaluations[$this->normalizeName($evaluationName)] ?? null;
                 if ($evaluation === null) {
-                    $report['errores'][] = "Fila {$line}: la evaluacion {$evaluationName} no existe.";
+                    $report['errores'][] = "Fila {$line}: la evaluación {$evaluationName} no existe.";
                     continue;
                 }
 
@@ -340,16 +340,16 @@ class GradeService
     private function validateGradeRow(string $dni, string $evaluation, string $scoreRaw, array $seen, string $key): ?string
     {
         if (! preg_match('/^\d{8}$/', $dni)) {
-            return 'DNI invalido. Debe contener 8 digitos.';
+            return 'DNI inválido. Debe contener 8 dígitos.';
         }
         if ($evaluation === '') {
-            return 'La evaluacion es obligatoria.';
+            return 'La evaluación es obligatoria.';
         }
         if (isset($seen[$key])) {
-            return 'Nota duplicada en el archivo para el mismo alumno y evaluacion.';
+            return 'Nota duplicada en el archivo para el mismo alumno y evaluación.';
         }
         if (! is_numeric($scoreRaw)) {
-            return 'La nota debe ser numerica.';
+            return 'La nota debe ser numérica.';
         }
         $score = (float) $scoreRaw;
         if ($score < 0 || $score > 20) {

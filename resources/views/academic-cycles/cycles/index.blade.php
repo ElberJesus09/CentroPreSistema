@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Ciclos academicos | '.config('app.name'))
+@section('title', 'Ciclos académicos | '.config('app.name'))
 
 @section('content')
     <x-academic.nav section="cycles" />
 
     <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-            <h1 class="text-xl font-semibold text-neutral-900">Ciclos academicos</h1>
+            <h1 class="text-xl font-semibold text-neutral-900">Ciclos académicos</h1>
             <p class="text-sm text-neutral-600">Periodos lectivos (nombre, fechas y estado).</p>
         </div>
         @can('create', \App\Models\AcademicCycle::class)
@@ -69,11 +69,11 @@
                             <x-modal
                                 id="cycle-delete-{{ $row->id }}"
                                 title="Eliminar ciclo"
-                                description="Esta accion no se puede deshacer."
+                                description="Esta acción no se puede deshacer."
                                 variant="danger"
                             >
-                                <p>Eliminaras el ciclo <strong>{{ $row->name }}</strong>.</p>
-                                <p class="mt-2 text-on-surface-variant">No podra eliminarse si tiene programaciones de turnos asociadas.</p>
+                                <p>Eliminarás el ciclo <strong>{{ $row->name }}</strong>.</p>
+                                <p class="mt-2 text-on-surface-variant">No podrá eliminarse si tiene programaciones de turnos asociadas.</p>
 
                                 <x-slot:actions>
                                     <button
@@ -86,7 +86,7 @@
                                     <form method="post" action="{{ route('academic-cycles.cycles.destroy', $row) }}" class="contents">
                                         @csrf
                                         @method('DELETE')
-                                        <x-button type="submit" variant="danger">Confirmar eliminacion</x-button>
+                                        <x-button type="submit" variant="danger">Confirmar eliminación</x-button>
                                     </form>
                                 </x-slot:actions>
                             </x-modal>

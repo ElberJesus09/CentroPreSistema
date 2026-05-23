@@ -23,7 +23,7 @@ class StudentPdfService
 
         $directory = storage_path('app/tmp/registration-mail');
         if (! is_dir($directory) && ! mkdir($directory, 0755, true) && ! is_dir($directory)) {
-            throw new InvalidArgumentException('Cannot create temporary PDF directory.');
+            throw new InvalidArgumentException('No se pudo crear la carpeta temporal para PDF.');
         }
 
         $token = (string) Str::ulid();
@@ -71,14 +71,14 @@ class StudentPdfService
         $directory = storage_path('app/tmp/registration-mail');
         if (! is_dir($directory) && ! mkdir($directory, 0755, true) && ! is_dir($directory)) {
             $this->deleteIfExists($paths);
-            throw new InvalidArgumentException('Cannot create temporary ZIP directory.');
+            throw new InvalidArgumentException('No se pudo crear la carpeta temporal para ZIP.');
         }
 
         $zipPath = $directory.DIRECTORY_SEPARATOR.'pack-'.Str::ulid().'.zip';
         $zip = new ZipArchive;
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
             $this->deleteIfExists($paths);
-            throw new RuntimeException('Cannot open ZIP archive for writing.');
+            throw new RuntimeException('No se pudo crear el archivo ZIP de documentos.');
         }
 
         $zip->addFile(

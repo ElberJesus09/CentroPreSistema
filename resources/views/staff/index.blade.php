@@ -88,7 +88,7 @@
                                     <x-modal
                                         id="staff-delete-{{ $row->id }}"
                                         title="Eliminar empleado"
-                                        description="Esta accion no se puede deshacer."
+                                        description="Esta acción no se puede deshacer."
                                         variant="danger"
                                     >
                                         <p>Eliminaras el acceso de <strong>{{ $row->first_name }} {{ $row->last_name }}</strong>.</p>

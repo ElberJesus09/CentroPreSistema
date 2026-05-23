@@ -123,7 +123,7 @@ class AcademicCycleService
     {
         if ($campus->schedules()->exists()) {
             throw ValidationException::withMessages([
-                'delete' => ['No se puede eliminar la sede: esta asignada en programaciones.'],
+                'delete' => ['No se puede eliminar la sede: está asignada en programaciones.'],
             ]);
         }
 
@@ -153,7 +153,7 @@ class AcademicCycleService
     {
         if ($shift->schedules()->exists()) {
             throw ValidationException::withMessages([
-                'delete' => ['No se puede eliminar el turno: esta asignado en programaciones.'],
+                'delete' => ['No se puede eliminar el turno: está asignado en programaciones.'],
             ]);
         }
 

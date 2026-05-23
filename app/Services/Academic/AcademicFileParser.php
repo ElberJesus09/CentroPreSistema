@@ -71,12 +71,12 @@ class AcademicFileParser
         $zip->close();
 
         if ($sheetXml === false) {
-            throw new RuntimeException('El archivo Excel no contiene una hoja valida.');
+            throw new RuntimeException('El archivo Excel no contiene una hoja válida.');
         }
 
         $xml = simplexml_load_string($sheetXml);
         if ($xml === false) {
-            throw new RuntimeException('El archivo Excel tiene una estructura invalida.');
+            throw new RuntimeException('El archivo Excel tiene una estructura inválida.');
         }
 
         $rows = [];

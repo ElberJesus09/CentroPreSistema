@@ -41,7 +41,7 @@ class AcademicCycleShiftController extends Controller
     {
         $academicCycleService->createSchedule($request->validated());
 
-        return redirect()->route('academic-cycles.index')->with('success', 'Programacion de turno registrada correctamente.');
+        return redirect()->route('academic-cycles.index')->with('success', 'Programación de turno registrada correctamente.');
     }
 
     public function edit(AcademicCycleShift $schedule, AcademicCycleService $academicCycleService): View
@@ -58,7 +58,7 @@ class AcademicCycleShiftController extends Controller
     {
         $academicCycleService->updateSchedule($schedule, $request->validated());
 
-        return redirect()->route('academic-cycles.index')->with('success', 'Programacion actualizada correctamente.');
+        return redirect()->route('academic-cycles.index')->with('success', 'Programación actualizada correctamente.');
     }
 
     public function destroy(AcademicCycleShift $schedule, AcademicCycleService $academicCycleService): RedirectResponse
@@ -69,6 +69,6 @@ class AcademicCycleShiftController extends Controller
             return redirect()->route('academic-cycles.index')->withErrors($e->errors());
         }
 
-        return redirect()->route('academic-cycles.index')->with('success', 'Programacion eliminada correctamente.');
+        return redirect()->route('academic-cycles.index')->with('success', 'Programación eliminada correctamente.');
     }
 }

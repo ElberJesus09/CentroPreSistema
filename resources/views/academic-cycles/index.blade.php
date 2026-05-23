@@ -76,7 +76,7 @@
                             <x-modal
                                 id="schedule-delete-{{ $row->id }}"
                                 title="Eliminar programacion"
-                                description="Esta accion no se puede deshacer."
+                                description="Esta acción no se puede deshacer."
                                 variant="danger"
                             >
                                 <p>Eliminaras la programacion de <strong>{{ $row->academicCycle?->name }}</strong>, sede <strong>{{ $row->campus?->name }}</strong>, turno <strong>{{ $row->shift?->name }}</strong>.</p>

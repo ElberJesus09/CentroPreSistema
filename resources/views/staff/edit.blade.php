@@ -20,17 +20,17 @@
             <x-input label="Nombres" name="first_name" :value="$staffMember->first_name" />
             <x-input label="Apellido paterno" name="last_name" :value="$staffMember->last_name" />
             <x-input label="Apellido materno" name="mother_last_name" :value="$staffMember->mother_last_name" />
-            <x-input label="DNI (8 digitos)" name="dni" :value="$staffMember->dni" />
-            <x-input label="Celular (9 digitos)" name="phone" :value="$staffMember->phone" />
+            <x-input label="DNI (8 dígitos)" name="dni" :value="$staffMember->dni" />
+            <x-input label="Celular (9 dígitos)" name="phone" :value="$staffMember->phone" />
             <x-input label="Correo" name="email" type="email" :value="$staffMember->email" />
             <x-input label="Usuario" name="username" :value="$staffMember->username" autocomplete="username" />
             <x-input
-                label="Nueva contrasena (opcional)"
+                label="Nueva contraseña (opcional)"
                 name="password"
                 type="password"
                 autocomplete="new-password"
             />
-            <x-input label="Confirmar contrasena" name="password_confirmation" type="password" autocomplete="new-password" />
+            <x-input label="Confirmar contraseña" name="password_confirmation" type="password" autocomplete="new-password" />
         </div>
         <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1">

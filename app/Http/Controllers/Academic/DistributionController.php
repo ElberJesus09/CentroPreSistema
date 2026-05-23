@@ -48,7 +48,7 @@ class DistributionController extends Controller
         ]);
 
         return back()
-            ->with('success', "Vista previa generada: {$preview['validos']} filas validas, {$preview['omitidos']} omitidas.")
+            ->with('success', "Vista previa generada: {$preview['validos']} filas válidas, {$preview['omitidos']} omitidas.")
             ->with('placement_preview', $preview);
     }
 
@@ -68,7 +68,7 @@ class DistributionController extends Controller
         Storage::delete((string) $data['path']);
         session()->forget('academic_placement_import');
 
-        return back()->with('success', "Importacion finalizada: {$report['importados']} notas registradas, {$report['omitidos']} filas omitidas.")
+        return back()->with('success', "Importación finalizada: {$report['importados']} notas registradas, {$report['omitidos']} filas omitidas.")
             ->with('import_errors', $report['errores']);
     }
 
@@ -81,21 +81,21 @@ class DistributionController extends Controller
 
         $report = $service->distribute($request->integer('academic_cycle_id'), $request->user(), $request->boolean('regenerate'));
 
-        return back()->with('success', "Distribucion completada: {$report['asignados']} alumnos asignados, {$report['sin_cupo']} sin cupo.");
+        return back()->with('success', "Distribución completada: {$report['asignados']} alumnos asignados, {$report['sin_cupo']} sin cupo.");
     }
 
     public function move(MoveStudentRequest $request, AcademicDistributionService $service): RedirectResponse
     {
         $service->moveStudent($request->integer('academic_cycle_id'), $request->integer('student_id'), $request->integer('classroom_id'), $request->user(), $request->validated('reason'));
 
-        return back()->with('success', 'Alumno movido correctamente. La distribucion quedo bloqueada para este alumno.');
+        return back()->with('success', 'Alumno movido correctamente. La distribución quedó bloqueada para este alumno.');
     }
 
     public function toggleLock(StudentClassroomAssignment $assignment, AcademicDistributionService $service): RedirectResponse
     {
         $service->toggleLock($assignment);
 
-        return back()->with('success', $assignment->fresh()?->distribution_locked ? 'Alumno bloqueado para conservar su aula.' : 'Alumno desbloqueado para redistribucion.');
+        return back()->with('success', $assignment->fresh()?->distribution_locked ? 'Alumno bloqueado para conservar su aula.' : 'Alumno desbloqueado para redistribución.');
     }
 
     private function cycleId(Request $request, ClassroomService $classrooms): ?int

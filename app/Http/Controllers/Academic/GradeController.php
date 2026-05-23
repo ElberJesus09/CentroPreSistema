@@ -43,14 +43,14 @@ class GradeController extends Controller
     {
         $service->createEvaluation($request->validated(), $request->user());
 
-        return back()->with('success', 'Evaluacion registrada correctamente.');
+        return back()->with('success', 'Evaluación registrada correctamente.');
     }
 
     public function updateEvaluation(UpdateEvaluationRequest $request, Evaluation $evaluation, GradeService $service): RedirectResponse
     {
         $service->updateEvaluation($evaluation, $request->validated());
 
-        return back()->with('success', 'Evaluacion actualizada correctamente.');
+        return back()->with('success', 'Evaluación actualizada correctamente.');
     }
 
     public function destroyEvaluation(Evaluation $evaluation, GradeService $service): RedirectResponse
@@ -58,7 +58,7 @@ class GradeController extends Controller
         $this->authorize('delete', $evaluation);
         $service->deleteEvaluation($evaluation);
 
-        return back()->with('success', 'Evaluacion eliminada correctamente.');
+        return back()->with('success', 'Evaluación eliminada correctamente.');
     }
 
     public function import(ImportAcademicFileRequest $request, GradeService $service): RedirectResponse
@@ -76,7 +76,7 @@ class GradeController extends Controller
         ]);
 
         return back()
-            ->with('success', "Vista previa generada: {$preview['validos']} filas validas, {$preview['omitidos']} omitidas.")
+            ->with('success', "Vista previa generada: {$preview['validos']} filas válidas, {$preview['omitidos']} omitidas.")
             ->with('grades_preview', $preview);
     }
 
@@ -96,7 +96,7 @@ class GradeController extends Controller
         Storage::delete((string) $data['path']);
         session()->forget('academic_grades_import');
 
-        return back()->with('success', "Importacion finalizada: {$report['importados']} notas registradas, {$report['omitidos']} filas omitidas.")
+        return back()->with('success', "Importación finalizada: {$report['importados']} notas registradas, {$report['omitidos']} filas omitidas.")
             ->with('import_errors', $report['errores']);
     }
 

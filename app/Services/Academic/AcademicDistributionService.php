@@ -65,7 +65,7 @@ class AcademicDistributionService
     {
         $analysis = $this->analyzePlacementRows($academicCycleId, $rows, true, $staff);
 
-        Log::info('Importacion de examen de ubicacion', ['staff_id' => $staff->id, 'academic_cycle_id' => $academicCycleId, 'report' => $analysis]);
+        Log::info('Importación de examen de ubicación', ['staff_id' => $staff->id, 'academic_cycle_id' => $academicCycleId, 'report' => $analysis]);
 
         return $analysis;
     }
@@ -130,7 +130,7 @@ class AcademicDistributionService
                     continue;
                 }
                 if ($student->status !== Student::STATUS_ACTIVE) {
-                    $report['errores'][] = "Fila {$line}: el alumno con DNI {$dni} no esta activo. Solo se importan notas de ubicacion para alumnos activos.";
+                    $report['errores'][] = "Fila {$line}: el alumno con DNI {$dni} no está activo. Solo se importan notas de ubicación para alumnos activos.";
                     continue;
                 }
 
@@ -231,7 +231,7 @@ class AcademicDistributionService
                 $assigned++;
             }
 
-            Log::info('Distribucion academica ejecutada', ['staff_id' => $staff->id, 'academic_cycle_id' => $academicCycleId, 'assigned' => $assigned]);
+            Log::info('Distribución académica ejecutada', ['staff_id' => $staff->id, 'academic_cycle_id' => $academicCycleId, 'assigned' => $assigned]);
 
             return ['asignados' => $assigned, 'sin_cupo' => $withoutCapacity];
         });
@@ -258,7 +258,7 @@ class AcademicDistributionService
                 ->lockForUpdate()
                 ->count();
             if ($used >= $classroom->capacity) {
-                throw ValidationException::withMessages(['classroom_id' => ['El aula seleccionada ya alcanzo su capacidad maxima.']]);
+                throw ValidationException::withMessages(['classroom_id' => ['El aula seleccionada ya alcanzó su capacidad máxima.']]);
             }
 
             $assignment = StudentClassroomAssignment::query()
@@ -323,13 +323,13 @@ class AcademicDistributionService
     private function validateScoreRow(string $dni, string $scoreRaw, array $seen): ?string
     {
         if (! preg_match('/^\d{8}$/', $dni)) {
-            return 'DNI invalido. Debe contener 8 digitos.';
+            return 'DNI inválido. Debe contener 8 dígitos.';
         }
         if (isset($seen[$dni])) {
             return "DNI duplicado en el archivo: {$dni}.";
         }
         if (! is_numeric($scoreRaw)) {
-            return 'La nota debe ser numerica.';
+            return 'La nota debe ser numérica.';
         }
         $score = (float) $scoreRaw;
         if ($score < 0 || $score > 20) {

@@ -448,7 +448,7 @@ class StudentService
     {
         if (! $schedule->status) {
             throw ValidationException::withMessages([
-                'academic_cycle_shift_id' => ['El turno seleccionado no esta activo.'],
+                'academic_cycle_shift_id' => ['El turno seleccionado no está activo.'],
             ]);
         }
 
