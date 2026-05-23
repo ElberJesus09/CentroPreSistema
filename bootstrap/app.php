@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAcademicCyclesModuleAccess;
+use App\Http\Middleware\EnsureAcademicManagementModuleAccess;
 use App\Http\Middleware\EnsureReportsModuleAccess;
 use App\Http\Middleware\EnsureStaffModuleAccess;
 use App\Http\Middleware\EnsureStudentsModuleAccess;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'staff.module' => EnsureStaffModuleAccess::class,
             'academic-cycles.module' => EnsureAcademicCyclesModuleAccess::class,
+            'academic-management.module' => EnsureAcademicManagementModuleAccess::class,
             'students.module' => EnsureStudentsModuleAccess::class,
             'reports.module' => EnsureReportsModuleAccess::class,
         ]);

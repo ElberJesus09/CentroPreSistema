@@ -22,6 +22,22 @@ class AcademicCycle extends Model
         return $this->hasMany(AcademicCycleShift::class);
     }
 
+    /**
+     * @return HasMany<Classroom, $this>
+     */
+    public function classrooms(): HasMany
+    {
+        return $this->hasMany(Classroom::class);
+    }
+
+    /**
+     * @return HasMany<Evaluation, $this>
+     */
+    public function evaluations(): HasMany
+    {
+        return $this->hasMany(Evaluation::class);
+    }
+
     protected function casts(): array
     {
         return [

@@ -124,3 +124,54 @@ document.addEventListener('DOMContentLoaded', () => {
     dniInput.setAttribute('maxlength', '8');
     dniInput.addEventListener('input', debounce(() => lookupStudentProfile(dniInput)));
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const dialog = document.getElementById('app-confirm-dialog');
+    if (!dialog) {
+        return;
+    }
+
+    const title = document.getElementById('app-confirm-dialog-title');
+    const message = document.getElementById('app-confirm-dialog-message');
+    const accept = dialog.querySelector('[data-confirm-accept]');
+    const cancelButtons = dialog.querySelectorAll('[data-confirm-cancel]');
+    let pendingForm = null;
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+        const submitter = event.submitter instanceof HTMLElement ? event.submitter : null;
+        const confirmMessage = form instanceof HTMLFormElement
+            ? (submitter?.dataset.confirmMessage || form.dataset.confirmMessage)
+            : null;
+
+        if (!(form instanceof HTMLFormElement) || !confirmMessage || form.dataset.confirmed === 'true') {
+            return;
+        }
+
+        event.preventDefault();
+        pendingForm = form;
+        title.textContent = submitter?.dataset.confirmTitle || form.dataset.confirmTitle || 'Confirmar acción';
+        message.textContent = confirmMessage;
+        accept.textContent = submitter?.dataset.confirmButton || form.dataset.confirmButton || 'Confirmar';
+        dialog.showModal();
+    });
+
+    accept?.addEventListener('click', () => {
+        if (!pendingForm) {
+            dialog.close();
+            return;
+        }
+
+        pendingForm.dataset.confirmed = 'true';
+        dialog.close();
+        pendingForm.requestSubmit();
+        pendingForm = null;
+    });
+
+    cancelButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            pendingForm = null;
+            dialog.close();
+        });
+    });
+});

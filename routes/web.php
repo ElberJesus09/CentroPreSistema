@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\AcademicCycleController;
 use App\Http\Controllers\AcademicCycleShiftController;
+use App\Http\Controllers\Academic\AcademicReportController;
+use App\Http\Controllers\Academic\ClassroomController;
+use App\Http\Controllers\Academic\DistributionController;
+use App\Http\Controllers\Academic\GradeController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\CampusController;
@@ -92,6 +96,25 @@ Route::prefix('admin')->group(function (): void {
             Route::get('reports/students/pdf', [ReportController::class, 'download'])->name('reports.students.pdf');
             Route::get('reports/students/emails.txt', [ReportController::class, 'downloadEmails'])->name('reports.students.emails');
             Route::get('reports/activity/pdf', [ReportController::class, 'downloadActivity'])->name('reports.activity.pdf');
+        });
+
+        Route::middleware('academic-management.module')->prefix('academic')->name('academic.')->group(function (): void {
+            Route::resource('classrooms', ClassroomController::class)->except(['show']);
+            Route::get('distribution', [DistributionController::class, 'index'])->name('distribution.index');
+            Route::post('distribution/import', [DistributionController::class, 'import'])->name('distribution.import');
+            Route::post('distribution/import/confirm', [DistributionController::class, 'confirmImport'])->name('distribution.import.confirm');
+            Route::post('distribution/run', [DistributionController::class, 'distribute'])->name('distribution.run');
+            Route::post('distribution/move', [DistributionController::class, 'move'])->name('distribution.move');
+            Route::post('distribution/assignments/{assignment}/lock', [DistributionController::class, 'toggleLock'])->name('distribution.lock');
+            Route::get('grades', [GradeController::class, 'index'])->name('grades.index');
+            Route::post('grades/import', [GradeController::class, 'import'])->name('grades.import');
+            Route::post('grades/import/confirm', [GradeController::class, 'confirmImport'])->name('grades.import.confirm');
+            Route::post('evaluations', [GradeController::class, 'storeEvaluation'])->name('evaluations.store');
+            Route::put('evaluations/{evaluation}', [GradeController::class, 'updateEvaluation'])->name('evaluations.update');
+            Route::delete('evaluations/{evaluation}', [GradeController::class, 'destroyEvaluation'])->name('evaluations.destroy');
+            Route::get('reports', [AcademicReportController::class, 'index'])->name('reports.index');
+            Route::get('reports/excel', [AcademicReportController::class, 'excel'])->name('reports.excel');
+            Route::get('reports/pdf', [AcademicReportController::class, 'pdf'])->name('reports.pdf');
         });
 
         Route::middleware('students.module')->group(function (): void {

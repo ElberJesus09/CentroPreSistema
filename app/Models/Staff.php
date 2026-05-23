@@ -78,6 +78,20 @@ class Staff extends Authenticatable
         return $this->isSuperAdmin() || $this->isAdmin();
     }
 
+    /** Modulo academico: administracion completa para admin; lectura/carga operativa para staff academico. */
+    public function canAccessAcademicManagementModule(): bool
+    {
+        $name = $this->role?->name;
+
+        return in_array($name, [
+            Role::NAME_SUPER_ADMIN,
+            Role::NAME_ADMIN,
+            Role::NAME_TRABAJADOR,
+            Role::NAME_DOCENTE,
+            Role::NAME_ASISTENTE,
+        ], true);
+    }
+
     protected function casts(): array
     {
         return [

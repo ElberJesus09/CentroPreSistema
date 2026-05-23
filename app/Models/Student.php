@@ -93,6 +93,22 @@ class Student extends Model
         return $this->hasMany(StudentMailLog::class);
     }
 
+    /**
+     * @return HasMany<StudentClassroomAssignment, $this>
+     */
+    public function classroomAssignments(): HasMany
+    {
+        return $this->hasMany(StudentClassroomAssignment::class);
+    }
+
+    /**
+     * @return HasMany<Grade, $this>
+     */
+    public function grades(): HasMany
+    {
+        return $this->hasMany(Grade::class);
+    }
+
     /** Nombre completo para listados. */
     public function fullName(): string
     {

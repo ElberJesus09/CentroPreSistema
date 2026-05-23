@@ -19,6 +19,7 @@
             </main>
         </div>
     </div>
+    <x-confirm-dialog />
     @stack('scripts')
 </body>
 </html>

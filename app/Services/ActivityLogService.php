@@ -24,6 +24,9 @@ class ActivityLogService
         'schedules' => 'Programacion',
         'exam_settings' => 'Configuracion de examen',
         'reports' => 'Reportes',
+        'academic_classrooms' => 'Aulas academicas',
+        'academic_evaluations' => 'Evaluaciones academicas',
+        'academic_grades' => 'Notas academicas',
     ];
 
     public function record(

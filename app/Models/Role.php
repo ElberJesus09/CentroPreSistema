@@ -16,6 +16,10 @@ class Role extends Model
 
     public const NAME_TRABAJADOR = 'trabajador';
 
+    public const NAME_DOCENTE = 'docente';
+
+    public const NAME_ASISTENTE = 'asistente';
+
     /** @var list<string> */
     protected $fillable = [
         'name',
@@ -29,6 +33,8 @@ class Role extends Model
             self::NAME_SUPER_ADMIN => 'Super administrador',
             self::NAME_ADMIN => 'Administrador',
             self::NAME_TRABAJADOR => 'Trabajador',
+            self::NAME_DOCENTE => 'Docente',
+            self::NAME_ASISTENTE => 'Asistente',
             default => $this->name,
         };
     }

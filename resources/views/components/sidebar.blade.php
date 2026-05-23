@@ -67,6 +67,18 @@
                 Alumnos
             </a>
         @endcan
+        @if (auth()->user()?->canAccessAcademicManagementModule())
+            <a
+                href="{{ route('academic.grades.index') }}"
+                @class([
+                    'rounded-lg px-3 py-2 font-semibold transition-colors',
+                    'bg-white/15 text-white' => str_starts_with((string) $current, 'academic.'),
+                    'text-primary-fixed/90 hover:bg-white/10 hover:text-white' => ! str_starts_with((string) $current, 'academic.'),
+                ])
+            >
+                Notas Académicas
+            </a>
+        @endif
         @if (auth()->user()?->canAccessReportsModule())
             <a
                 href="{{ route('reports.index') }}"

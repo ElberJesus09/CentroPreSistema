@@ -5,7 +5,10 @@ namespace App\Observers;
 use App\Models\AcademicCycle;
 use App\Models\AcademicCycleShift;
 use App\Models\Campus;
+use App\Models\Classroom;
 use App\Models\ExamSetting;
+use App\Models\Evaluation;
+use App\Models\Grade;
 use App\Models\Shift;
 use App\Models\Staff;
 use App\Models\Student;
@@ -92,6 +95,9 @@ class ActivityLogObserver
             $model instanceof Campus => 'campuses',
             $model instanceof Shift => 'shifts',
             $model instanceof AcademicCycleShift => 'schedules',
+            $model instanceof Classroom => 'academic_classrooms',
+            $model instanceof Evaluation => 'academic_evaluations',
+            $model instanceof Grade => 'academic_grades',
             $model instanceof ExamSetting => 'exam_settings',
             default => null,
         };
@@ -118,6 +124,9 @@ class ActivityLogObserver
             $model instanceof Campus => 'sede',
             $model instanceof Shift => 'turno',
             $model instanceof AcademicCycleShift => 'programacion',
+            $model instanceof Classroom => 'aula',
+            $model instanceof Evaluation => 'evaluacion',
+            $model instanceof Grade => 'nota',
             $model instanceof ExamSetting => 'configuracion de examen',
             default => class_basename($model),
         };

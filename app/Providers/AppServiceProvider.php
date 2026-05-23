@@ -5,7 +5,10 @@ namespace App\Providers;
 use App\Models\AcademicCycle;
 use App\Models\AcademicCycleShift;
 use App\Models\Campus;
+use App\Models\Classroom;
 use App\Models\ExamSetting;
+use App\Models\Evaluation;
+use App\Models\Grade;
 use App\Models\Shift;
 use App\Models\Staff;
 use App\Models\Student;
@@ -46,6 +49,9 @@ class AppServiceProvider extends ServiceProvider
         Shift::observe(ActivityLogObserver::class);
         AcademicCycleShift::observe(ActivityLogObserver::class);
         ExamSetting::observe(ActivityLogObserver::class);
+        Classroom::observe(ActivityLogObserver::class);
+        Evaluation::observe(ActivityLogObserver::class);
+        Grade::observe(ActivityLogObserver::class);
 
         $this->configureRegistrationRateLimiters();
     }
