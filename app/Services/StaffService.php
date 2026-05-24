@@ -4,11 +4,16 @@ namespace App\Services;
 
 use App\Models\Role;
 use App\Models\Staff;
+use App\Services\ActivityLogService;
+use App\Support\Permissions\FormatsPermissionChanges;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class StaffService
 {
+    use FormatsPermissionChanges;
+
     /** Listado paginado para administracion. */
     public function paginateIndex(?Staff $actor = null, int $perPage = 15): LengthAwarePaginator
     {
@@ -28,19 +33,37 @@ class StaffService
     /** Alta desde datos ya validados. */
     public function create(array $attributes): Staff
     {
-        return Staff::query()->create($attributes);
+        /** @var Staff $staff */
+        $staff = Staff::query()->create($attributes);
+        $this->syncSpatieRole($staff);
+
+        return $staff;
     }
 
     /** Actualizacion; omite password si viene vacio. */
-    public function update(Staff $staff, array $attributes): Staff
+    public function update(Staff $staff, array $attributes, ?array $directPermissions = null): Staff
     {
-        if (empty($attributes['password'])) {
-            unset($attributes['password']);
-        }
+        return DB::transaction(function () use ($staff, $attributes, $directPermissions): Staff {
+            $staff->loadMissing('role', 'permissions');
+            $beforeRole = $staff->role?->displayName() ?? 'Sin rol';
+            $beforeDirectPermissions = $staff->permissions->pluck('name')->sort()->values()->all();
 
-        $staff->update($attributes);
+            if (empty($attributes['password'])) {
+                unset($attributes['password']);
+            }
 
-        return $staff->fresh()->load('role');
+            $staff->update($attributes);
+            $this->syncSpatieRole($staff);
+
+            if ($directPermissions !== null) {
+                $staff->syncPermissions($directPermissions);
+            }
+
+            $updated = $staff->fresh()->load('role', 'permissions');
+            $this->recordAccessChanges($updated, $beforeRole, $beforeDirectPermissions, $directPermissions);
+
+            return $updated;
+        });
     }
 
     /** Baja logica (soft delete). */
@@ -86,4 +109,58 @@ class StaffService
 
         return $query;
     }
+
+    private function syncSpatieRole(Staff $staff): void
+    {
+        $staff->loadMissing('role');
+
+        if ($staff->role !== null) {
+            $staff->syncRoles([$staff->role]);
+        }
+    }
+
+    /**
+     * @param  list<string>  $beforeDirectPermissions
+     * @param  list<string>|null  $requestedDirectPermissions
+     */
+    private function recordAccessChanges(
+        Staff $staff,
+        string $beforeRole,
+        array $beforeDirectPermissions,
+        ?array $requestedDirectPermissions,
+    ): void {
+        $changed = [];
+        $afterRole = $staff->role?->displayName() ?? 'Sin rol';
+
+        if ($beforeRole !== $afterRole) {
+            $changed['role_name'] = [
+                'before' => $beforeRole,
+                'after' => $afterRole,
+            ];
+        }
+
+        if ($requestedDirectPermissions !== null) {
+            $afterDirectPermissions = $staff->permissions->pluck('name')->sort()->values()->all();
+
+            if ($beforeDirectPermissions !== $afterDirectPermissions) {
+                $changed['direct_permissions'] = [
+                    'before' => null,
+                    'after' => $this->permissionDiff($beforeDirectPermissions, $afterDirectPermissions),
+                ];
+            }
+        }
+
+        if ($changed === []) {
+            return;
+        }
+
+        app(ActivityLogService::class)->record(
+            'roles_permissions',
+            'updated',
+            'Actualizó accesos del empleado: '.(trim($staff->first_name.' '.$staff->last_name) ?: $staff->username),
+            $staff,
+            ['changed' => $changed],
+        );
+    }
+
 }

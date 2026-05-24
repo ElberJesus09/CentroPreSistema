@@ -10,27 +10,27 @@ class ShiftPolicy
 {
     public function viewAny(Staff $user): bool
     {
-        return $this->adminRoles($user);
+        return $user->can('academic-cycles.view') || $this->adminRoles($user);
     }
 
     public function view(Staff $user, Shift $shift): bool
     {
-        return $this->adminRoles($user);
+        return $user->can('academic-cycles.view') || $this->adminRoles($user);
     }
 
     public function create(Staff $user): bool
     {
-        return $this->adminRoles($user);
+        return $user->can('academic-cycles.manage') || $this->adminRoles($user);
     }
 
     public function update(Staff $user, Shift $shift): bool
     {
-        return $this->adminRoles($user);
+        return $user->can('academic-cycles.manage') || $this->adminRoles($user);
     }
 
     public function delete(Staff $user, Shift $shift): bool
     {
-        return $this->adminRoles($user);
+        return $user->can('academic-cycles.manage') || $this->adminRoles($user);
     }
 
     private function adminRoles(Staff $user): bool

@@ -9,22 +9,22 @@ class StaffPolicy
 {
     public function viewAny(Staff $user): bool
     {
-        return $this->staffManagementRoles($user);
+        return $user->can('staff.view') || $this->staffManagementRoles($user);
     }
 
     public function view(Staff $user, Staff $model): bool
     {
-        return $this->staffManagementRoles($user);
+        return $user->can('staff.view') || $this->staffManagementRoles($user);
     }
 
     public function create(Staff $user): bool
     {
-        return $this->staffManagementRoles($user);
+        return $user->can('staff.create') || $this->staffManagementRoles($user);
     }
 
     public function update(Staff $user, Staff $model): bool
     {
-        if (! $this->staffManagementRoles($user)) {
+        if (! ($user->can('staff.update') || $this->staffManagementRoles($user))) {
             return false;
         }
 
@@ -37,7 +37,7 @@ class StaffPolicy
 
     public function delete(Staff $user, Staff $model): bool
     {
-        if (! $this->staffManagementRoles($user)) {
+        if (! ($user->can('staff.delete') || $this->staffManagementRoles($user))) {
             return false;
         }
 

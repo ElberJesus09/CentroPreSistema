@@ -31,6 +31,18 @@
                 Personal
             </a>
         @endcan
+        @if (auth()->user()?->can('roles.view') || auth()->user()?->isSuperAdmin())
+            <a
+                href="{{ route('permissions.index') }}"
+                @class([
+                    'rounded-lg px-3 py-2 font-semibold transition-colors',
+                    'bg-white/15 text-white' => str_starts_with((string) $current, 'permissions.'),
+                    'text-primary-fixed/90 hover:bg-white/10 hover:text-white' => ! str_starts_with((string) $current, 'permissions.'),
+                ])
+            >
+                Roles y permisos
+            </a>
+        @endif
         @can('viewAny', \App\Models\AcademicCycleShift::class)
             <a
                 href="{{ route('academic-cycles.index') }}"

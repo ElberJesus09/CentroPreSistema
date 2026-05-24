@@ -189,6 +189,10 @@ return [
         'counts_for_average' => 'uso en promedio',
         'rounding_decimals' => 'decimales del promedio',
         'reason' => 'motivo',
+        'permissions' => 'permisos',
+        'permissions.*' => 'permiso',
+        'duration_minutes' => 'duración en minutos',
+        'expires_at' => 'fecha de vencimiento',
 
         'student.first_name' => 'nombres del estudiante',
         'student.last_name' => 'apellido paterno del estudiante',

@@ -15,7 +15,7 @@ class EnsureStaffModuleAccess
     {
         $user = $request->user();
         if ($user === null || ! $user->canAccessStaffModule()) {
-            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'No tienes permiso para acceder a este modulo.');
         }
 
         return $next($request);

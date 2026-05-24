@@ -50,6 +50,11 @@ class ActivityLog extends Model
         'registration_date' => 'Fecha de registro',
         'registration_mail_enabled' => 'Envío de correo',
         'role_id' => 'Rol',
+        'role_name' => 'Rol',
+        'role_permissions' => 'Permisos del rol',
+        'direct_permissions' => 'Permisos directos',
+        'temporary_permissions' => 'Permisos temporales',
+        'expires_at' => 'Vence',
         'school_id' => 'Colegio',
         'shift_id' => 'Turno',
         'start_date' => 'Fecha de inicio',
@@ -113,7 +118,22 @@ class ActivityLog extends Model
         }
 
         if (is_array($value)) {
-            return json_encode($value, JSON_UNESCAPED_UNICODE) ?: 'valor no disponible';
+            if ($value === []) {
+                return 'ninguno';
+            }
+
+            if (array_key_exists('Agregados', $value) || array_key_exists('Quitados', $value)) {
+                $added = $value['Agregados'] ?? [];
+                $removed = $value['Quitados'] ?? [];
+
+                return sprintf(
+                    'Agregados: %s | Quitados: %s',
+                    is_array($added) && $added !== [] ? implode(', ', $added) : 'ninguno',
+                    is_array($removed) && $removed !== [] ? implode(', ', $removed) : 'ninguno',
+                );
+            }
+
+            return implode(', ', array_map(fn (mixed $item) => (string) $item, $value));
         }
 
         return mb_substr((string) $value, 0, 120);

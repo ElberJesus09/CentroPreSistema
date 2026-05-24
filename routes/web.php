@@ -6,6 +6,8 @@ use App\Http\Controllers\Academic\AcademicReportController;
 use App\Http\Controllers\Academic\ClassroomController;
 use App\Http\Controllers\Academic\DistributionController;
 use App\Http\Controllers\Academic\GradeController;
+use App\Http\Controllers\Admin\RolePermissionController;
+use App\Http\Controllers\Admin\StaffDirectPermissionController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\CampusController;
@@ -81,6 +83,9 @@ Route::prefix('admin')->group(function (): void {
 
         Route::middleware('staff.module')->group(function (): void {
             Route::resource('staff', StaffController::class)->except(['show']);
+            Route::get('permissions', [RolePermissionController::class, 'index'])->name('permissions.index');
+            Route::put('permissions/{role}', [RolePermissionController::class, 'update'])->name('permissions.update');
+            Route::put('permissions/staff/{staff}', [StaffDirectPermissionController::class, 'update'])->name('permissions.staff.update');
         });
 
         Route::middleware('academic-cycles.module')->prefix('academic-cycles')->name('academic-cycles.')->group(function (): void {

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Staff;
 
 use App\Models\Role;
 use App\Models\Staff;
+use App\Support\Permissions\PermissionCatalog;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -47,6 +48,8 @@ class UpdateStaffRequest extends FormRequest
             'password' => ['nullable', 'confirmed', Password::min(8)],
             'role_id' => ['required', 'integer', $this->assignableRoleRule()],
             'status' => ['required', 'boolean'],
+            'direct_permissions' => ['nullable', 'array'],
+            'direct_permissions.*' => ['string', Rule::in(PermissionCatalog::names())],
         ];
     }
 
@@ -76,10 +79,23 @@ class UpdateStaffRequest extends FormRequest
     {
         $data = $this->validated();
         unset($data['password_confirmation']);
+        unset($data['direct_permissions']);
         if (empty($data['password'])) {
             unset($data['password']);
         }
 
         return $data;
+    }
+
+    /**
+     * @return list<string>|null
+     */
+    public function directPermissionNames(): ?array
+    {
+        if (! ($this->user()?->can('roles.update') || $this->user()?->isSuperAdmin())) {
+            return null;
+        }
+
+        return array_values($this->validated('direct_permissions', []));
     }
 }

@@ -10,7 +10,7 @@ class ClassroomPolicy
 {
     public function viewAny(Staff $user): bool
     {
-        return $user->canAccessAcademicManagementModule();
+        return $user->can('academic.view') || $user->canAccessAcademicManagementModule();
     }
 
     public function view(Staff $user, Classroom $classroom): bool
@@ -35,6 +35,7 @@ class ClassroomPolicy
 
     private function isManager(Staff $user): bool
     {
-        return in_array($user->role?->name, [Role::NAME_SUPER_ADMIN, Role::NAME_ADMIN], true);
+        return $user->can('academic.classrooms.manage')
+            || in_array($user->role?->name, [Role::NAME_SUPER_ADMIN, Role::NAME_ADMIN], true);
     }
 }

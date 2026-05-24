@@ -18,6 +18,11 @@
                             Personal
                         </a>
                     @endcan
+                    @if (auth()->user()?->can('roles.view') || auth()->user()?->isSuperAdmin())
+                        <a href="{{ route('permissions.index') }}" class="block px-4 py-2 text-sm text-on-surface hover:bg-surface-container-high">
+                            Roles y permisos
+                        </a>
+                    @endif
                     @can('viewAny', \App\Models\AcademicCycleShift::class)
                         <a href="{{ route('academic-cycles.index') }}" class="block px-4 py-2 text-sm text-on-surface hover:bg-surface-container-high">
                             Ciclos académicos

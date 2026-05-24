@@ -11,31 +11,31 @@ class StudentPolicy
     /** trabajador, admin y super_admin listan expedientes. */
     public function viewAny(Staff $user): bool
     {
-        return $this->staffWithStudentAccess($user);
+        return $user->can('students.view') || $this->staffWithStudentAccess($user);
     }
 
     /** Lectura de detalle alineada al modulo alumnos. */
     public function view(Staff $user, Student $student): bool
     {
-        return $this->staffWithStudentAccess($user);
+        return $user->can('students.view') || $this->staffWithStudentAccess($user);
     }
 
     /** Alta permitida a personal operativo y administradores. */
     public function create(Staff $user): bool
     {
-        return $this->staffWithStudentAccess($user);
+        return $user->can('students.create') || $this->staffWithStudentAccess($user);
     }
 
     /** Edicion permitida al mismo conjunto de roles. */
     public function update(Staff $user, Student $student): bool
     {
-        return $this->staffWithStudentAccess($user);
+        return $user->can('students.update') || $this->staffWithStudentAccess($user);
     }
 
     /** Reenvio de correo de confirmacion (mismos roles que edicion). */
     public function resendRegistrationMail(Staff $user, Student $student): bool
     {
-        return $this->update($user, $student);
+        return $user->can('students.documents') || $this->update($user, $student);
     }
 
     /** Descarga PDFs de inscripcion sin enviar correo (mismos roles que edicion). */
@@ -49,7 +49,7 @@ class StudentPolicy
     {
         $name = $user->role?->name;
 
-        return $name === Role::NAME_SUPER_ADMIN || $name === Role::NAME_ADMIN;
+        return $user->can('students.delete') || $name === Role::NAME_SUPER_ADMIN || $name === Role::NAME_ADMIN;
     }
 
     /** Roles con acceso al modulo alumnos. */

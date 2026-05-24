@@ -10,27 +10,27 @@ class AcademicCyclePolicy
 {
     public function viewAny(Staff $user): bool
     {
-        return $this->adminRoles($user);
+        return $user->can('academic-cycles.view') || $this->adminRoles($user);
     }
 
     public function view(Staff $user, AcademicCycle $academicCycle): bool
     {
-        return $this->adminRoles($user);
+        return $user->can('academic-cycles.view') || $this->adminRoles($user);
     }
 
     public function create(Staff $user): bool
     {
-        return $this->adminRoles($user);
+        return $user->can('academic-cycles.manage') || $this->adminRoles($user);
     }
 
     public function update(Staff $user, AcademicCycle $academicCycle): bool
     {
-        return $this->adminRoles($user);
+        return $user->can('academic-cycles.manage') || $this->adminRoles($user);
     }
 
     public function delete(Staff $user, AcademicCycle $academicCycle): bool
     {
-        return $this->adminRoles($user);
+        return $user->can('academic-cycles.manage') || $this->adminRoles($user);
     }
 
     /** super_admin y admin; trabajador sin acceso. */

@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -52,6 +53,15 @@ class AppServiceProvider extends ServiceProvider
         Classroom::observe(ActivityLogObserver::class);
         Evaluation::observe(ActivityLogObserver::class);
         Grade::observe(ActivityLogObserver::class);
+
+        Gate::before(function (Staff $user, string $ability): ?bool {
+            $hasTemporaryPermission = $user->temporaryPermissionGrants()
+                ->where('expires_at', '>', now())
+                ->whereHas('permission', fn ($query) => $query->where('name', $ability))
+                ->exists();
+
+            return $hasTemporaryPermission ? true : null;
+        });
 
         $this->configureRegistrationRateLimiters();
     }

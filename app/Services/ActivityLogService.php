@@ -24,6 +24,7 @@ class ActivityLogService
         'schedules' => 'Programación',
         'exam_settings' => 'Configuracion de examen',
         'reports' => 'Reportes',
+        'roles_permissions' => 'Roles y permisos',
         'academic_classrooms' => 'Aulas academicas',
         'academic_evaluations' => 'Evaluaciones academicas',
         'academic_grades' => 'Notas academicas',

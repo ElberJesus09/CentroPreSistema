@@ -6,7 +6,7 @@
     <div class="mb-6">
         <a href="{{ route('staff.index') }}" class="text-sm font-medium text-brand hover:underline">Volver al listado</a>
         <h1 class="mt-2 text-xl font-semibold text-neutral-900">Nuevo empleado</h1>
-        <p class="text-sm text-neutral-600">Complete los datos y asigne rol y estado.</p>
+        <p class="text-sm text-neutral-600">Completa los datos y asigna rol y estado.</p>
     </div>
 
     <form method="post" action="{{ route('staff.store') }}" class="max-w-3xl space-y-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
@@ -19,7 +19,7 @@
             <x-input label="Celular (9 dígitos)" name="phone" :value="old('phone')" />
             <x-input label="Correo" name="email" type="email" :value="old('email')" />
             <x-input label="Usuario" name="username" :value="old('username')" autocomplete="username" />
-            <x-input label="Contrasena" name="password" type="password" autocomplete="new-password" />
+            <x-input label="Contraseña" name="password" type="password" autocomplete="new-password" />
             <x-input label="Confirmar contraseña" name="password_confirmation" type="password" autocomplete="new-password" />
         </div>
         <div class="grid gap-4 sm:grid-cols-2">

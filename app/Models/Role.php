@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Permission\Models\Role as SpatieRole;
 
-class Role extends Model
+class Role extends SpatieRole
 {
     /** @use HasFactory<\Database\Factories\RoleFactory> */
     use HasFactory;
@@ -23,6 +23,7 @@ class Role extends Model
     /** @var list<string> */
     protected $fillable = [
         'name',
+        'guard_name',
         'status',
     ];
 
@@ -48,12 +49,16 @@ class Role extends Model
             return [
                 self::NAME_ADMIN,
                 self::NAME_TRABAJADOR,
+                self::NAME_DOCENTE,
+                self::NAME_ASISTENTE,
             ];
         }
 
         if ($actor?->isAdmin()) {
             return [
                 self::NAME_TRABAJADOR,
+                self::NAME_DOCENTE,
+                self::NAME_ASISTENTE,
             ];
         }
 

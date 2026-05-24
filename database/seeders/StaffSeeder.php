@@ -15,7 +15,8 @@ class StaffSeeder extends Seeder
         // Plain password; el modelo aplica cast hashed al persistir.
         $password = (string) (env('SUPERADMIN_INITIAL_PASSWORD') ?: 'CentroPre!2026Secure');
 
-        Staff::query()->firstOrCreate(
+        /** @var Staff $staff */
+        $staff = Staff::query()->firstOrCreate(
             ['username' => 'superadmin'],
             [
                 'first_name' => 'Super',
@@ -29,5 +30,7 @@ class StaffSeeder extends Seeder
                 'status' => true,
             ]
         );
+
+        $staff->syncRoles([$role]);
     }
 }

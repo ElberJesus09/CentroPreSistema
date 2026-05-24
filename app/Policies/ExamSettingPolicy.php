@@ -9,16 +9,16 @@ class ExamSettingPolicy
 {
     public function viewAny(Staff $user): bool
     {
-        return $user->isSuperAdmin() || $user->isAdmin();
+        return $user->can('exam-settings.update') || $user->isSuperAdmin() || $user->isAdmin();
     }
 
     public function view(Staff $user, ExamSetting $examSetting): bool
     {
-        return $user->isSuperAdmin() || $user->isAdmin();
+        return $user->can('exam-settings.update') || $user->isSuperAdmin() || $user->isAdmin();
     }
 
     public function update(Staff $user, ExamSetting $examSetting): bool
     {
-        return $user->isSuperAdmin() || $user->isAdmin();
+        return $user->can('exam-settings.update') || $user->isSuperAdmin() || $user->isAdmin();
     }
 }
