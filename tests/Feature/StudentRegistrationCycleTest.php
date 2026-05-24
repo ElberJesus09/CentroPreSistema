@@ -78,6 +78,14 @@ function makeScheduleForCycle(string $cycleName, string $startDate): array
     return [$cycle, $schedule];
 }
 
+function makeScheduleWithCapacity(string $cycleName, string $startDate, int $capacity): array
+{
+    [, $schedule] = makeScheduleForCycle($cycleName, $startDate);
+    $schedule->update(['capacity' => $capacity]);
+
+    return [$schedule->academicCycle, $schedule->fresh()];
+}
+
 test('student dni is unique within the same academic cycle', function () {
     $career = Career::query()->create([
         'name' => 'Ingenieria Test',
@@ -108,4 +116,19 @@ test('student dni can register in different academic cycles', function () {
 
     expect($first->dni)->toBe($second->dni)
         ->and($first->academic_cycle_id)->not->toBe($second->academic_cycle_id);
+});
+
+test('student registration cannot exceed schedule capacity', function () {
+    $career = Career::query()->create([
+        'name' => 'Medicina Test',
+        'code' => 'MT',
+        'status' => true,
+    ]);
+    [, $schedule] = makeScheduleWithCapacity('2028-I', '2028-01-01', 1);
+
+    $service = app(StudentService::class);
+    $service->registerStudent(registrationPayload($schedule->id, $career->id, '11112222'));
+
+    expect(fn () => $service->registerStudent(registrationPayload($schedule->id, $career->id, '33334444')))
+        ->toThrow(ValidationException::class);
 });
