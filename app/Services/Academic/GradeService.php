@@ -8,7 +8,6 @@ use App\Models\Evaluation;
 use App\Models\Grade;
 use App\Models\Staff;
 use App\Models\Student;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
@@ -19,9 +18,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GradeService
 {
-    public function __construct(private readonly AcademicFileParser $parser)
-    {
-    }
+    public function __construct(private readonly AcademicFileParser $parser) {}
 
     public function overview(int $academicCycleId, array $filters = []): array
     {
@@ -124,6 +121,7 @@ class GradeService
 
                 if ($dni === '' && $evaluationName === '' && $scoreRaw === '') {
                     $report['omitidos']++;
+
                     continue;
                 }
 
@@ -131,6 +129,7 @@ class GradeService
                 $error = $this->validateGradeRow($dni, $evaluationName, $scoreRaw, $seen, $key);
                 if ($error !== null) {
                     $report['errores'][] = "Fila {$line}: {$error}";
+
                     continue;
                 }
                 $seen[$key] = true;
@@ -138,16 +137,19 @@ class GradeService
                 $student = Student::query()->where('dni', $dni)->where('academic_cycle_id', $academicCycleId)->first();
                 if ($student === null) {
                     $report['errores'][] = "Fila {$line}: el alumno con DNI {$dni} no existe en el ciclo.";
+
                     continue;
                 }
                 if ($student->status !== Student::STATUS_ACTIVE) {
                     $report['errores'][] = "Fila {$line}: el alumno con DNI {$dni} no está activo. Solo se importan notas para alumnos activos.";
+
                     continue;
                 }
 
                 $evaluation = $evaluations[$this->normalizeName($evaluationName)] ?? null;
                 if ($evaluation === null) {
                     $report['errores'][] = "Fila {$line}: la evaluación {$evaluationName} no existe.";
+
                     continue;
                 }
 
@@ -204,7 +206,7 @@ class GradeService
         $filename = 'reporte-academico-'.now()->format('Ymd-His').'.xls';
 
         return response()->streamDownload(function () use ($rows): void {
-            echo "<table><thead><tr><th>DNI</th><th>Alumno</th><th>Carrera</th><th>Turno</th><th>Aula</th><th>Promedio</th><th>Ranking</th></tr></thead><tbody>";
+            echo '<table><thead><tr><th>DNI</th><th>Alumno</th><th>Carrera</th><th>Turno</th><th>Aula</th><th>Promedio</th><th>Ranking</th></tr></thead><tbody>';
             foreach ($rows as $row) {
                 echo '<tr><td>'.e($row->dni).'</td><td>'.e($row->alumno).'</td><td>'.e($row->carrera).'</td><td>'.e($row->turno).'</td><td>'.e($row->aula).'</td><td>'.e((string) $row->promedio).'</td><td>'.e((string) $row->ranking).'</td></tr>';
             }

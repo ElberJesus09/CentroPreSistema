@@ -6,8 +6,8 @@ use App\Models\AcademicCycle;
 use App\Models\AcademicCycleShift;
 use App\Models\Campus;
 use App\Models\Classroom;
-use App\Models\ExamSetting;
 use App\Models\Evaluation;
+use App\Models\ExamSetting;
 use App\Models\Grade;
 use App\Models\Shift;
 use App\Models\Staff;
@@ -15,25 +15,21 @@ use App\Models\Student;
 use App\Observers\ActivityLogObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         if ($this->app->environment('production')) {
@@ -70,19 +66,29 @@ class AppServiceProvider extends ServiceProvider
     private function configureRegistrationRateLimiters(): void
     {
         RateLimiter::for('public-registration', function (Request $request) {
-            return Limit::perMinute(20)->by($request->ip());
+            return Limit::perMinute(20)
+                ->by($request->ip())
+                ->response(fn () => $this->throttledResponse($request, 'public-registration'));
         });
 
         RateLimiter::for('public-registration-finish', function (Request $request) {
-            return Limit::perMinute(5)->by($request->ip());
+            return Limit::perMinutes(10, 4)
+                ->by($request->ip())
+                ->response(fn () => $this->throttledResponse($request, 'public-registration-finish'));
         });
 
         RateLimiter::for('public-registration-lookup', function (Request $request) {
-            return Limit::perMinute(30)->by($request->ip());
+            return Limit::perMinute(20)
+                ->by($request->ip())
+                ->response(fn () => $this->throttledResponse($request, 'public-registration-lookup'));
         });
 
         RateLimiter::for('admin-login', function (Request $request) {
-            return Limit::perMinute(10)->by($request->ip());
+            $username = mb_strtolower((string) $request->input('username', 'anonimo'));
+
+            return Limit::perMinutes(15, 5)
+                ->by($request->ip().'|'.$username)
+                ->response(fn () => $this->throttledResponse($request, 'admin-login'));
         });
 
         RateLimiter::for('admin-student-mail-resend', function (Request $request) {
@@ -98,5 +104,17 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(20)->by((string) $key);
         });
+    }
+
+    private function throttledResponse(Request $request, string $limiter): Response
+    {
+        Log::channel('security')->warning('Solicitud bloqueada por limite de tasa.', [
+            'limiter' => $limiter,
+            'ip' => $request->ip(),
+            'path' => $request->path(),
+            'user_agent' => mb_substr((string) $request->userAgent(), 0, 500),
+        ]);
+
+        return response('Demasiadas solicitudes. Intente nuevamente en unos minutos.', 429);
     }
 }

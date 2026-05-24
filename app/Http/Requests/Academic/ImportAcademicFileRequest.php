@@ -15,7 +15,7 @@ class ImportAcademicFileRequest extends FormRequest
     {
         return [
             'academic_cycle_id' => ['required', 'integer', 'exists:academic_cycles,id'],
-            'file' => ['required', 'file', 'max:10240', 'mimes:csv,txt,xlsx'],
+            'file' => ['required', 'file', 'max:10240', 'extensions:csv,txt,xlsx', 'mimes:csv,txt,xlsx'],
         ];
     }
 }

@@ -136,6 +136,15 @@ return [
             'replace_placeholders' => true,
         ],
 
+        /** Eventos de seguridad: intentos fallidos, bloqueos y abuso de formularios. */
+        'security' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/security.log'),
+            'level' => env('SECURITY_LOG_LEVEL', 'warning'),
+            'days' => env('LOG_SECURITY_DAYS', 90),
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Academic;
 
+use App\Models\Classroom;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,7 @@ class StoreClassroomRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', \App\Models\Classroom::class) ?? false;
+        return $this->user()?->can('create', Classroom::class) ?? false;
     }
 
     public function rules(): array

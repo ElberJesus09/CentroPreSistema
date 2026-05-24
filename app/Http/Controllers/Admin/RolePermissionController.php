@@ -9,8 +9,8 @@ use App\Models\Staff;
 use App\Services\ActivityLogService;
 use App\Support\Permissions\FormatsPermissionChanges;
 use App\Support\Permissions\PermissionCatalog;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Spatie\Permission\PermissionRegistrar;
@@ -106,5 +106,4 @@ class RolePermissionController extends Controller
             ->route('permissions.index')
             ->with('success', 'Permisos del rol actualizados correctamente.');
     }
-
 }

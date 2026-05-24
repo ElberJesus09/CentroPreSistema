@@ -18,9 +18,7 @@ use Illuminate\Validation\ValidationException;
 
 class AcademicDistributionService
 {
-    public function __construct(private readonly AcademicFileParser $parser)
-    {
-    }
+    public function __construct(private readonly AcademicFileParser $parser) {}
 
     public function dashboard(int $academicCycleId, array $filters = []): array
     {
@@ -114,12 +112,14 @@ class AcademicDistributionService
 
                 if ($dni === '' && $scoreRaw === '') {
                     $report['omitidos']++;
+
                     continue;
                 }
 
                 $error = $this->validateScoreRow($dni, $scoreRaw, $seen);
                 if ($error !== null) {
                     $report['errores'][] = "Fila {$line}: {$error}";
+
                     continue;
                 }
                 $seen[$dni] = true;
@@ -127,10 +127,12 @@ class AcademicDistributionService
                 $student = Student::query()->where('dni', $dni)->where('academic_cycle_id', $academicCycleId)->first();
                 if ($student === null) {
                     $report['errores'][] = "Fila {$line}: el DNI {$dni} no existe en el ciclo seleccionado.";
+
                     continue;
                 }
                 if ($student->status !== Student::STATUS_ACTIVE) {
                     $report['errores'][] = "Fila {$line}: el alumno con DNI {$dni} no está activo. Solo se importan notas de ubicación para alumnos activos.";
+
                     continue;
                 }
 
@@ -219,6 +221,7 @@ class AcademicDistributionService
 
                 if ($target === null) {
                     $withoutCapacity++;
+
                     continue;
                 }
 

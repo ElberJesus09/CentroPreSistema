@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureAcademicManagementModuleAccess;
 use App\Http\Middleware\EnsureReportsModuleAccess;
 use App\Http\Middleware\EnsureStaffModuleAccess;
 use App\Http\Middleware\EnsureStudentsModuleAccess;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -19,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            SecurityHeaders::class,
+        ]);
+
         $middleware->alias([
             'staff.module' => EnsureStaffModuleAccess::class,
             'academic-cycles.module' => EnsureAcademicCyclesModuleAccess::class,

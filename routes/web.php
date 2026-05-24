@@ -1,11 +1,11 @@
 <?php
 
-use App\Http\Controllers\AcademicCycleController;
-use App\Http\Controllers\AcademicCycleShiftController;
 use App\Http\Controllers\Academic\AcademicReportController;
 use App\Http\Controllers\Academic\ClassroomController;
 use App\Http\Controllers\Academic\DistributionController;
 use App\Http\Controllers\Academic\GradeController;
+use App\Http\Controllers\AcademicCycleController;
+use App\Http\Controllers\AcademicCycleShiftController;
 use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\StaffDirectPermissionController;
 use App\Http\Controllers\Auth\LoginController;
@@ -19,8 +19,8 @@ use App\Http\Controllers\Public\PublicHomeController;
 use App\Http\Controllers\Public\RegistrationWizardController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ShiftController;
-use App\Http\Controllers\StudentCardController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\StudentCardController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 

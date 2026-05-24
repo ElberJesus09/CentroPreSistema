@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Academic;
 
+use App\Models\Evaluation;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,7 @@ class StoreEvaluationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', \App\Models\Evaluation::class) ?? false;
+        return $this->user()?->can('create', Evaluation::class) ?? false;
     }
 
     public function rules(): array

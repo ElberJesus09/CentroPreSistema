@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Role;
 use App\Models\Staff;
-use App\Services\ActivityLogService;
 use App\Support\Permissions\FormatsPermissionChanges;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -162,5 +161,4 @@ class StaffService
             ['changed' => $changed],
         );
     }
-
 }

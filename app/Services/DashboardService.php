@@ -418,7 +418,7 @@ class DashboardService
     }
 
     /**
-     * @param array<string, mixed> $chartData
+     * @param  array<string, mixed>  $chartData
      * @return array<string, mixed>
      */
     public function chartPayloadForClient(array $chartData): array
@@ -436,7 +436,7 @@ class DashboardService
     }
 
     /**
-     * @param array<string, mixed> $chartPayload
+     * @param  array<string, mixed>  $chartPayload
      */
     public function hasRenderableCharts(array $chartPayload): bool
     {

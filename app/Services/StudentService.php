@@ -301,6 +301,7 @@ class StudentService
         $cycle = $row->academicCycle?->name ?? '—';
         $campus = $row->campus?->name ?? '—';
         $shift = $row->shift?->name ?? '—';
+
         return "{$cycle} — {$campus} — {$shift}";
     }
 

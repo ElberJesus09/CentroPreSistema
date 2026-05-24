@@ -4,6 +4,7 @@ namespace App\Services\Academic;
 
 use App\Models\AcademicCycle;
 use App\Models\Classroom;
+use App\Models\Student;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,7 @@ class ClassroomService
         return Classroom::query()
             ->with('academicCycle:id,name')
             ->withCount([
-                'assignments' => fn ($query) => $query->whereHas('student', fn ($student) => $student->where('status', \App\Models\Student::STATUS_ACTIVE)),
+                'assignments' => fn ($query) => $query->whereHas('student', fn ($student) => $student->where('status', Student::STATUS_ACTIVE)),
             ])
             ->when($filters['academic_cycle_id'] ?? null, fn ($q, int $id) => $q->where('academic_cycle_id', $id))
             ->when(($filters['search'] ?? '') !== '', function ($q) use ($filters): void {

@@ -5,8 +5,8 @@ namespace App\Http\Requests\PublicRegistration;
 use App\Models\AcademicCycleShift;
 use App\Models\Student;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class RegistrationStep4Request extends FormRequest
 {

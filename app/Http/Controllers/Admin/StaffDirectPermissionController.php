@@ -8,7 +8,6 @@ use App\Models\Staff;
 use App\Models\StaffTemporaryPermissionGrant;
 use App\Services\ActivityLogService;
 use App\Support\Permissions\FormatsPermissionChanges;
-use App\Support\Permissions\PermissionCatalog;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -92,5 +91,4 @@ class StaffDirectPermissionController extends Controller
             ->route('permissions.index', ['mode' => 'staff', 'staff_id' => $staff->id])
             ->with('success', 'Permisos temporales del empleado actualizados correctamente.');
     }
-
 }

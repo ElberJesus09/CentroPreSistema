@@ -61,7 +61,7 @@ class AcademicFileParser
      */
     private function xlsxRows(string $path): array
     {
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($path) !== true) {
             throw new RuntimeException('No se pudo leer el archivo Excel.');
         }
