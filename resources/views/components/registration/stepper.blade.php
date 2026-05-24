@@ -9,14 +9,14 @@
     ],
 ])
 
-<nav class="mb-10" aria-label="Progreso del formulario">
+<nav class="mb-8 rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-4 shadow-sm" aria-label="Progreso del formulario">
     <ol class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-2">
         @foreach ($steps as $n => $label)
             <li class="flex min-w-0 flex-1 items-center gap-2 sm:flex-col sm:items-center sm:gap-2">
                 <span
                     @class([
                         'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold shadow-sm transition-colors',
-                        'bg-primary text-on-primary' => $step === $n,
+                        'bg-primary text-on-primary ring-4 ring-primary/10' => $step === $n,
                         'bg-primary-container text-on-primary-container' => $step > $n,
                         'border border-outline-variant bg-surface-container-high text-on-surface-variant' => $step < $n,
                     ])
@@ -36,7 +36,7 @@
             </li>
         @endforeach
     </ol>
-    <div class="relative mt-6 h-0.5 w-full overflow-hidden rounded-full bg-surface-container-high">
+    <div class="relative mt-6 h-1 w-full overflow-hidden rounded-full bg-surface-container-high">
         <div
             class="h-full rounded-full bg-primary transition-all duration-300 ease-out"
             style="width: {{ ($step - 1) / max(count($steps) - 1, 1) * 100 }}%"

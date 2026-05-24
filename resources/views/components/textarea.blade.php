@@ -19,7 +19,7 @@
         name="{{ $name }}"
         rows="{{ $rows }}"
         @if ($hasError) aria-invalid="true" aria-describedby="{{ $fieldId }}-error" @endif
-        {{ $attributes->merge(['class' => 'block w-full rounded-lg border border-outline-variant bg-white px-3 py-2.5 text-sm text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary']) }}
+        {{ $attributes->merge(['class' => 'block w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 py-3 text-sm text-on-surface shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20']) }}
     >{{ old($computedError, $value) }}</textarea>
     @error($computedError)
         <p id="{{ $fieldId }}-error" class="text-sm text-error">{{ $message }}</p>

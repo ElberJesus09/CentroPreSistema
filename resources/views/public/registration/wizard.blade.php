@@ -3,20 +3,27 @@
 @section('title', 'Inscripción | '.config('app.name'))
 
 @section('content')
-    <div class="mx-auto max-w-4xl">
-        <div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-            <header class="text-center sm:text-left">
-                <h1 class="font-display text-3xl font-bold text-primary md:text-4xl">Inscripción en línea</h1>
-                <p class="mt-2 text-sm text-on-surface-variant md:text-base">
+    <div class="mx-auto max-w-5xl">
+        <div class="mb-8 rounded-xl bg-primary p-6 text-on-primary shadow-xl shadow-primary/10 md:p-8">
+            <header class="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
+                <div>
+                    <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-secondary-fixed">
+                        <span class="material-symbols-outlined text-base">edit_document</span>
+                        Paso {{ $step }} de 5
+                    </span>
+                    <h1 class="mt-4 font-display text-3xl font-bold leading-tight text-white md:text-4xl">Inscripción en línea</h1>
+                    <p class="mt-2 max-w-2xl text-sm leading-relaxed text-primary-fixed md:text-base">
                     Complete cada paso. Puede retroceder sin perder lo ya ingresado.
-                </p>
+                    </p>
+                </div>
             </header>
             @if ($step > 1)
                 <a
                     href="{{ route('registration.step.show', ['step' => $step - 1]) }}"
-                    class="shrink-0 text-center text-sm font-semibold text-primary hover:text-secondary sm:text-right"
+                    class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-white/20 sm:text-right"
                 >
-                    ← Paso anterior
+                    <span class="material-symbols-outlined text-lg">arrow_back</span>
+                    Paso anterior
                 </a>
             @endif
         </div>
@@ -24,7 +31,7 @@
         <x-registration.stepper :step="$step" />
 
         <div
-            class="rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] sm:p-8 md:p-10"
+            class="rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-6 shadow-xl shadow-primary/5 sm:p-8 md:p-10"
         >
             @if ($step === 1)
                 <form method="post" action="{{ route('registration.step1.store') }}" class="relative space-y-8">
@@ -131,7 +138,7 @@
                         <x-input label="Departamento" name="school[department]" :value="old('school.department', data_get($draft, 'school.department'))" />
                         <x-input label="Provincia" name="school[province]" :value="old('school.province', data_get($draft, 'school.province'))" />
                         <x-input label="Distrito" name="school[district]" :value="old('school.district', data_get($draft, 'school.district'))" />
-                        <x-input label="Año de egreso" name="school[graduation_year]" type="number" :value="old('school.graduation_year', data_get($draft, 'school.graduation_year'))" />
+                        <x-input label="Año de egreso" name="school[graduation_year]" type="number" :value="old('school.graduation_year', data_get($draft, 'school.graduation_year'))" placeholder="Ej. 2019" />
                     </div>
                     <div class="flex flex-wrap justify-end gap-3 border-t border-outline-variant/50 pt-6">
                         <x-button type="submit" variant="primary" class="gap-2 rounded-lg px-8 shadow-md">

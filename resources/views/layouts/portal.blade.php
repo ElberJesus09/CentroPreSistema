@@ -10,11 +10,11 @@
 </head>
 <body class="min-h-screen bg-surface font-sans text-on-surface antialiased">
     <x-public.nav />
-    <main class="mx-auto w-full max-w-7xl px-margin-mobile py-8 lg:px-margin-desktop lg:py-12">
+    <main class="mx-auto w-full max-w-7xl px-margin-mobile py-6 lg:px-margin-desktop lg:py-10">
         <x-alert />
         @yield('content')
     </main>
-    <footer class="border-t border-outline-variant bg-primary py-12 text-on-primary">
+    <footer class="mt-8 border-t border-outline-variant bg-primary py-12 text-on-primary">
         <div class="mx-auto flex max-w-7xl flex-col gap-8 px-margin-mobile lg:flex-row lg:justify-between lg:px-margin-desktop">
             <div class="max-w-sm">
                 <p class="font-display text-lg font-bold text-on-primary">{{ config('app.name') }}</p>

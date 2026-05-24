@@ -3,15 +3,38 @@
 @section('title', 'Carreras | '.config('app.name'))
 
 @section('content')
-    <div class="mb-10 text-center md:text-left">
-        <h1 class="font-display text-3xl font-bold text-primary md:text-4xl lg:text-5xl">Carreras destacadas</h1>
-        <p class="mx-auto mt-3 max-w-2xl text-base text-on-surface-variant md:mx-0 md:text-lg">
-            Programas de la UNPRG con mayor demanda en nuestro centro. Explora el catálogo completo más abajo.
-        </p>
-    </div>
+    <section class="grid gap-8 rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-6 shadow-sm md:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+        <div>
+            <span class="inline-flex items-center gap-2 rounded-full bg-secondary-container px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-on-secondary-container">
+                <span class="material-symbols-outlined text-base">workspace_premium</span>
+                Catálogo UNPRG
+            </span>
+            <h1 class="mt-5 font-display text-4xl font-bold leading-tight text-primary md:text-5xl">
+                Carreras para elegir con claridad
+            </h1>
+            <p class="mt-4 max-w-2xl text-base leading-relaxed text-on-surface-variant md:text-lg">
+                Explora las opciones con mayor demanda y luego revisa el catálogo completo. Al inscribirte podrás seleccionar carrera, ciclo, sede y turno disponible.
+            </p>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-3">
+            <div class="rounded-xl bg-primary p-5 text-on-primary">
+                <span class="material-symbols-outlined text-secondary-fixed">school</span>
+                <p class="mt-6 font-display text-3xl font-bold">{{ $featuredCareers->count() }}</p>
+                <p class="text-xs font-semibold uppercase tracking-wide text-primary-fixed/85">Destacadas</p>
+            </div>
+            <div class="rounded-xl bg-secondary-container p-5 text-on-secondary-container">
+                <span class="material-symbols-outlined">format_list_bulleted</span>
+                <p class="mt-6 font-display text-3xl font-bold">{{ $otherCareers->count() }}</p>
+                <p class="text-xs font-semibold uppercase tracking-wide">Adicionales</p>
+            </div>
+            <a href="{{ route('registration.start') }}" class="group rounded-xl border border-outline-variant/70 bg-surface-container-low p-5 text-primary transition hover:border-primary hover:bg-primary-fixed">
+                <span class="material-symbols-outlined transition group-hover:translate-x-1">arrow_forward</span>
+                <p class="mt-6 text-sm font-bold">Comenzar inscripción</p>
+            </a>
+        </div>
+    </section>
 
-    {{-- Carreras premium (grid atractivo) --}}
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+    <section class="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
         @foreach ($featuredCareers as $index => $career)
             @php
                 $careerImages = [
@@ -28,25 +51,25 @@
                 ];
 
                 $careerDescriptions = [
-                    'MED' => 'Refuerza biologia, quimica y razonamiento cientifico para postular a una carrera enfocada en el cuidado integral de la salud.',
-                    'ICV' => 'Preparate en matematica, fisica y analisis espacial para disenar soluciones de infraestructura al servicio de la comunidad.',
-                    'ISI' => 'Fortalece logica, algoritmos y pensamiento analitico para crear sistemas que resuelvan problemas reales con tecnologia.',
-                    'ICI' => 'Desarrolla bases en computacion, programacion y redes para construir soluciones digitales seguras y eficientes.',
-                    'ARC' => 'Potencia tu creatividad, geometria y vision espacial para proyectar espacios funcionales, sostenibles y humanos.',
-                    'MVE' => 'Afianza ciencias naturales y vocacion de servicio para cuidar la salud animal y aportar al bienestar productivo y social.',
-                    'DER' => 'Entrena comprension lectora, argumentacion y analisis social para formarte en defensa juridica y justicia publica.',
-                    'ENF' => 'Consolida biologia, comunicacion y criterio humano para una profesion centrada en el cuidado directo de las personas.',
-                    'PSI' => 'Refuerza lectura critica, biologia y ciencias sociales para comprender la conducta y acompanar procesos de cambio.',
-                    'IAG' => 'Preparate en matematica, fisica y ciencias agrarias para optimizar el uso del agua, suelos y tecnologia en el campo.',
+                    'MED' => 'Refuerza biología, química y razonamiento científico para postular a una carrera enfocada en salud.',
+                    'ICV' => 'Prepárate en matemática, física y análisis espacial para diseñar infraestructura al servicio de la comunidad.',
+                    'ISI' => 'Fortalece lógica, algoritmos y pensamiento analítico para crear sistemas que resuelvan problemas reales.',
+                    'ICI' => 'Desarrolla bases en computación, programación y redes para construir soluciones digitales seguras.',
+                    'ARC' => 'Potencia creatividad, geometría y visión espacial para proyectar espacios funcionales y humanos.',
+                    'MVE' => 'Afianza ciencias naturales y vocación de servicio para cuidar la salud animal y el bienestar productivo.',
+                    'DER' => 'Entrena comprensión lectora, argumentación y análisis social para formarte en justicia pública.',
+                    'ENF' => 'Consolida biología, comunicación y criterio humano para una profesión centrada en el cuidado.',
+                    'PSI' => 'Refuerza lectura crítica, biología y ciencias sociales para comprender la conducta humana.',
+                    'IAG' => 'Prepárate en matemática, física y ciencias agrarias para optimizar agua, suelos y tecnología.',
                 ];
 
                 $careerImage = $careerImages[$career->code] ?? null;
-                $careerDescription = $careerDescriptions[$career->code] ?? 'Preparate con contenidos clave para postular con mas seguridad a esta carrera de la UNPRG.';
+                $careerDescription = $careerDescriptions[$career->code] ?? 'Prepárate con contenidos clave para postular con más seguridad a esta carrera de la UNPRG.';
             @endphp
             <article
-                class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)]"
+                class="group overflow-hidden rounded-xl border border-outline-variant/50 bg-surface-container-lowest shadow-sm transition duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-xl"
             >
-                <div class="relative h-40 overflow-hidden bg-surface-variant">
+                <div class="relative aspect-[16/10] overflow-hidden bg-surface-variant">
                     @if ($careerImage)
                         <img
                             src="{{ asset('images/careers/'.$careerImage) }}"
@@ -55,72 +78,63 @@
                             loading="lazy"
                         />
                     @else
-                        <div class="absolute inset-0 flex items-center justify-center bg-primary-container opacity-90">
+                        <div class="absolute inset-0 flex items-center justify-center bg-primary-fixed">
                             <span class="material-symbols-outlined text-6xl text-primary">school</span>
                         </div>
                     @endif
-                    <div class="absolute inset-0 bg-gradient-to-t from-primary/45 via-transparent to-transparent"></div>
-                    <div class="absolute left-4 top-4 rounded-full bg-secondary-container px-3 py-1 text-xs font-bold text-on-secondary-container shadow-sm">
-                        {{ $career->code }}
-                    </div>
                 </div>
-                <div class="flex flex-1 flex-col p-6">
-                    <h2 class="font-display text-xl font-bold text-primary">{{ $career->name }}</h2>
-                    <p class="mt-2 flex-1 text-sm leading-relaxed text-on-surface-variant">
+                <div class="flex min-h-52 flex-col p-6">
+                    <h2 class="font-display text-xl font-bold leading-tight text-primary">{{ $career->name }}</h2>
+                    <p class="mt-3 flex-1 text-sm leading-relaxed text-on-surface-variant">
                         {{ $careerDescription }}
                     </p>
-                    <a
-                        href="{{ route('registration.start') }}"
-                        class="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary transition group-hover:gap-3 group-hover:text-secondary"
-                    >
-                        Inscribirse
-                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
-                    </a>
+                    <div class="mt-5 flex items-center justify-between border-t border-outline-variant/50 pt-4">
+                        <span class="text-xs font-bold uppercase tracking-wide text-secondary">Preparacion CPU</span>
+                        <a
+                            href="{{ route('registration.start') }}"
+                            class="inline-flex items-center gap-1 text-sm font-bold text-primary transition group-hover:text-secondary"
+                        >
+                            Inscribirse
+                            <span class="material-symbols-outlined text-lg transition group-hover:translate-x-1">arrow_forward</span>
+                        </a>
+                    </div>
                 </div>
             </article>
         @endforeach
-    </div>
+    </section>
 
-    {{-- Resto del catálogo --}}
-    <section class="mt-16 rounded-2xl border border-outline-variant/40 bg-surface-container-low px-6 py-10 md:px-10 md:py-12">
-        <div class="mx-auto max-w-3xl text-center">
-            <h2 class="font-display text-2xl font-bold text-primary md:text-3xl">Más de {{ $otherCareers->count() }} carreras adicionales</h2>
-            <p class="mt-3 text-sm leading-relaxed text-on-surface-variant md:text-base">
-                El Centro Preuniversitario Juan Francisco Aguinaga Castro prepara postulantes en todas las facultades de la UNPRG:
-                ciencias, ingenierías, salud, humanidades, educación y más. Elige la tuya en el formulario de inscripción.
+    <section class="mt-14 grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+        <div class="space-y-4">
+            <span class="inline-flex items-center gap-2 rounded-full bg-primary-fixed px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-primary">
+                <span class="material-symbols-outlined text-base">search</span>
+                Catálogo completo
+            </span>
+            <h2 class="font-display text-3xl font-bold text-primary">Más alternativas para postular</h2>
+            <p class="text-sm leading-relaxed text-on-surface-variant md:text-base">
+                El Centro Preuniversitario prepara postulantes en facultades de ciencias, ingenierías, salud, humanidades y educación. La carrera final se confirma en el formulario.
             </p>
-        </div>
-
-        @if ($otherCareers->isNotEmpty())
-            <div
-                class="mx-auto mt-8 flex max-h-72 flex-wrap justify-center gap-2 overflow-y-auto rounded-xl border border-outline-variant/30 bg-surface-container-lowest/80 p-4 md:max-h-96"
-            >
-                @foreach ($otherCareers as $career)
-                    <span
-                        class="inline-flex items-center rounded-full border border-outline-variant/50 bg-white px-3 py-1.5 text-xs font-semibold text-on-surface shadow-sm"
-                        title="{{ $career->name }}"
-                    >
-                        <span class="mr-1.5 text-secondary">{{ $career->code }}</span>
-                        <span class="max-w-[14rem] truncate">{{ $career->name }}</span>
-                    </span>
-                @endforeach
-            </div>
-        @endif
-
-        <div class="mx-auto mt-10 flex flex-wrap justify-center gap-3">
-            <a
-                href="{{ route('registration.start') }}"
-                class="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-on-primary shadow-md transition hover:bg-primary-container active:scale-[0.98]"
-            >
-                <span class="material-symbols-outlined text-lg">edit_document</span>
-                Comenzar inscripción
-            </a>
             <a
                 href="{{ route('campuses') }}"
-                class="inline-flex items-center justify-center rounded-full border-2 border-secondary px-6 py-3 text-sm font-bold text-secondary transition hover:bg-secondary-container active:scale-[0.98]"
+                class="inline-flex items-center gap-2 rounded-xl border border-secondary px-5 py-3 text-sm font-bold text-secondary transition hover:bg-secondary-container active:scale-[0.98]"
             >
+                <span class="material-symbols-outlined text-lg">location_on</span>
                 Ver sedes
             </a>
         </div>
+
+        @if ($otherCareers->isNotEmpty())
+            <div class="max-h-[28rem] overflow-y-auto rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-3 shadow-inner">
+                <div class="grid gap-2 sm:grid-cols-2">
+                    @foreach ($otherCareers as $career)
+                        <div
+                            class="flex min-w-0 items-center gap-3 rounded-lg border border-outline-variant/40 bg-surface-container-low px-3 py-2.5"
+                            title="{{ $career->name }}"
+                        >
+                            <span class="truncate text-sm font-semibold text-on-surface">{{ $career->name }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
     </section>
 @endsection

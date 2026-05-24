@@ -52,6 +52,10 @@
 }
 
 @layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
     .material-symbols-outlined {
         font-family: 'Material Symbols Outlined';
         font-weight: normal;
