@@ -52,4 +52,18 @@ class AcademicGroupCatalog
 
         return $group === null ? 'Sin grupo academico' : self::groups()[$group];
     }
+
+    /** @return list<string> */
+    public static function compatibleGroups(string $group): array
+    {
+        return match ($group) {
+            'economic' => ['law_politics', 'social'],
+            'law_politics' => ['economic', 'social'],
+            'engineering' => ['agricultural'],
+            'agricultural' => ['engineering', 'medical'],
+            'medical' => ['agricultural'],
+            'social' => ['law_politics', 'economic'],
+            default => [],
+        };
+    }
 }

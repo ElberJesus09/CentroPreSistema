@@ -104,16 +104,31 @@ class GradeService
      */
     private function analyzeGradeRows(int $academicCycleId, array $rows, bool $persist, ?Staff $staff = null): array
     {
+        $this->ensureDefaultEvaluations($academicCycleId);
+
         $report = ['importados' => 0, 'errores' => [], 'omitidos' => 0];
         $report['validos'] = 0;
         $report['muestra'] = [];
         $seen = [];
+        $validRows = [];
         $evaluations = Evaluation::query()
             ->where('academic_cycle_id', $academicCycleId)
             ->get()
             ->keyBy(fn (Evaluation $evaluation): string => $this->normalizeName($evaluation->name));
 
-        $callback = function () use ($rows, $academicCycleId, $staff, $persist, &$report, &$seen, $evaluations): void {
+        $candidateDnis = collect($rows)
+            ->map(fn (array $row): string => trim((string) ($row[0] ?? '')))
+            ->filter(fn (string $dni): bool => preg_match('/^\d{8}$/', $dni) === 1)
+            ->unique()
+            ->values();
+
+        $students = Student::query()
+            ->where('academic_cycle_id', $academicCycleId)
+            ->whereIn('dni', $candidateDnis)
+            ->get(['id', 'first_name', 'last_name', 'mother_last_name', 'dni', 'status'])
+            ->keyBy('dni');
+
+        $callback = function () use ($rows, $staff, $persist, &$report, &$seen, &$validRows, $evaluations, $students): void {
             foreach ($rows as $index => $row) {
                 $line = $index + 2;
                 $dni = trim((string) ($row[0] ?? ''));
@@ -135,7 +150,7 @@ class GradeService
                 }
                 $seen[$key] = true;
 
-                $student = Student::query()->where('dni', $dni)->where('academic_cycle_id', $academicCycleId)->first();
+                $student = $students[$dni] ?? null;
                 if ($student === null) {
                     $report['errores'][] = "Fila {$line}: el alumno con DNI {$dni} no existe en el ciclo.";
 
@@ -155,6 +170,12 @@ class GradeService
                 }
 
                 $report['validos']++;
+                $validRows[] = [
+                    'student_id' => $student->id,
+                    'evaluation_id' => $evaluation->id,
+                    'score' => (float) $scoreRaw,
+                    'created_by' => $staff?->id,
+                ];
                 if (count($report['muestra']) < 20) {
                     $report['muestra'][] = [
                         'fila' => $line,
@@ -164,14 +185,22 @@ class GradeService
                         'nota' => (float) $scoreRaw,
                     ];
                 }
+            }
 
-                if ($persist) {
-                    Grade::query()->updateOrCreate(
-                        ['student_id' => $student->id, 'evaluation_id' => $evaluation->id],
-                        ['score' => (float) $scoreRaw, 'created_by' => $staff?->id],
+            if ($persist && $validRows !== []) {
+                $now = now();
+                foreach (array_chunk($validRows, 500) as $chunk) {
+                    Grade::query()->upsert(
+                        array_map(fn (array $row): array => [
+                            ...$row,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ], $chunk),
+                        ['student_id', 'evaluation_id'],
+                        ['score', 'created_by', 'updated_at'],
                     );
-                    $report['importados']++;
                 }
+                $report['importados'] = count($validRows);
             }
         };
 

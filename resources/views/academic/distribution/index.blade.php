@@ -163,6 +163,7 @@
                     <input type="checkbox" name="respect_academic_groups" value="1">
                     Respetar grupos academicos
                 </label>
+                <p class="mb-3 text-xs text-on-surface-variant">Si un grupo queda con menos de 20 alumnos, se completa el aula con grupos academicos compatibles.</p>
                 <x-button type="submit">Distribuir alumnos</x-button>
             </form>
         </div>

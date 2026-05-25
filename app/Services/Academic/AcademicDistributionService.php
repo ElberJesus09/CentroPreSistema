@@ -19,6 +19,8 @@ use Illuminate\Validation\ValidationException;
 
 class AcademicDistributionService
 {
+    private const int MIN_GROUP_REMAINDER_TO_KEEP_SEPARATE = 20;
+
     public function __construct(private readonly AcademicFileParser $parser) {}
 
     public function dashboard(int $academicCycleId, array $filters = []): array
@@ -79,6 +81,7 @@ class AcademicDistributionService
         $report['validos'] = 0;
         $report['muestra'] = [];
         $seen = [];
+        $validRows = [];
 
         $evaluation = Evaluation::query()
             ->where('academic_cycle_id', $academicCycleId)
@@ -105,7 +108,19 @@ class AcademicDistributionService
             ]);
         }
 
-        $callback = function () use ($rows, $academicCycleId, $staff, $evaluation, $persist, &$report, &$seen): void {
+        $candidateDnis = collect($rows)
+            ->map(fn (array $row): string => trim((string) ($row[0] ?? '')))
+            ->filter(fn (string $dni): bool => preg_match('/^\d{8}$/', $dni) === 1)
+            ->unique()
+            ->values();
+
+        $students = Student::query()
+            ->where('academic_cycle_id', $academicCycleId)
+            ->whereIn('dni', $candidateDnis)
+            ->get(['id', 'first_name', 'last_name', 'mother_last_name', 'dni', 'status'])
+            ->keyBy('dni');
+
+        $callback = function () use ($rows, $academicCycleId, $staff, $evaluation, $persist, &$report, &$seen, &$validRows, $students): void {
             foreach ($rows as $index => $row) {
                 $line = $index + 2;
                 $dni = trim((string) ($row[0] ?? ''));
@@ -125,7 +140,7 @@ class AcademicDistributionService
                 }
                 $seen[$dni] = true;
 
-                $student = Student::query()->where('dni', $dni)->where('academic_cycle_id', $academicCycleId)->first();
+                $student = $students[$dni] ?? null;
                 if ($student === null) {
                     $report['errores'][] = "Fila {$line}: el DNI {$dni} no existe en el ciclo seleccionado.";
 
@@ -138,6 +153,10 @@ class AcademicDistributionService
                 }
 
                 $report['validos']++;
+                $validRows[] = [
+                    'student_id' => $student->id,
+                    'score' => (float) $scoreRaw,
+                ];
                 if (count($report['muestra']) < 20) {
                     $report['muestra'][] = [
                         'fila' => $line,
@@ -146,20 +165,38 @@ class AcademicDistributionService
                         'nota' => (float) $scoreRaw,
                     ];
                 }
+            }
 
-                if ($persist) {
-                    Grade::query()->updateOrCreate(
-                        ['student_id' => $student->id, 'evaluation_id' => $evaluation->id],
-                        ['score' => (float) $scoreRaw, 'created_by' => $staff?->id],
+            if ($persist && $validRows !== []) {
+                $now = now();
+                foreach (array_chunk($validRows, 500) as $chunk) {
+                    Grade::query()->upsert(
+                        array_map(fn (array $row): array => [
+                            'student_id' => $row['student_id'],
+                            'evaluation_id' => $evaluation->id,
+                            'score' => $row['score'],
+                            'created_by' => $staff?->id,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ], $chunk),
+                        ['student_id', 'evaluation_id'],
+                        ['score', 'created_by', 'updated_at'],
                     );
 
-                    StudentClassroomAssignment::query()->updateOrCreate(
-                        ['student_id' => $student->id, 'academic_cycle_id' => $academicCycleId],
-                        ['placement_score' => (float) $scoreRaw, 'assigned_by' => $staff?->id],
+                    StudentClassroomAssignment::query()->upsert(
+                        array_map(fn (array $row): array => [
+                            'student_id' => $row['student_id'],
+                            'academic_cycle_id' => $academicCycleId,
+                            'placement_score' => $row['score'],
+                            'assigned_by' => $staff?->id,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ], $chunk),
+                        ['student_id', 'academic_cycle_id'],
+                        ['placement_score', 'assigned_by', 'updated_at'],
                     );
-
-                    $report['importados']++;
                 }
+                $report['importados'] = count($validRows);
             }
         };
 
@@ -205,28 +242,6 @@ class AcademicDistributionService
                 ->lockForUpdate()
                 ->get();
 
-            if ($respectAcademicGroups) {
-                $groupOrder = array_flip(array_keys(AcademicGroupCatalog::groups()));
-                $students = $students
-                    ->sort(function (StudentClassroomAssignment $a, StudentClassroomAssignment $b) use ($groupOrder): int {
-                        $left = [
-                            $groupOrder[AcademicGroupCatalog::groupForCareerCode($a->student?->career?->code) ?? ''] ?? 999,
-                            -1 * (float) $a->placement_score,
-                            (int) $a->student_id,
-                        ];
-                        $right = [
-                            $groupOrder[AcademicGroupCatalog::groupForCareerCode($b->student?->career?->code) ?? ''] ?? 999,
-                            -1 * (float) $b->placement_score,
-                            (int) $b->student_id,
-                        ];
-
-                        return $left <=> $right;
-                    })
-                    ->values();
-            }
-
-            $assigned = 0;
-            $withoutCapacity = 0;
             $usage = StudentClassroomAssignment::query()
                 ->where('academic_cycle_id', $academicCycleId)
                 ->whereHas('student', fn ($query) => $query->where('status', Student::STATUS_ACTIVE))
@@ -235,30 +250,148 @@ class AcademicDistributionService
                 ->groupBy('classroom_id')
                 ->pluck('total', 'classroom_id');
 
-            foreach ($students as $assignment) {
-                $target = $classrooms->first(function (Classroom $classroom) use (&$usage): bool {
-                    return (int) ($usage[$classroom->id] ?? 0) < (int) $classroom->capacity;
-                });
-
-                if ($target === null) {
-                    $withoutCapacity++;
-
-                    continue;
-                }
-
-                $assignment->update([
-                    'classroom_id' => $target->id,
-                    'assigned_by' => $staff->id,
-                    'assigned_at' => now(),
-                ]);
-                $usage[$target->id] = (int) ($usage[$target->id] ?? 0) + 1;
-                $assigned++;
-            }
+            [$assigned, $withoutCapacity] = $respectAcademicGroups
+                ? $this->distributeRespectingAcademicGroups($students, $classrooms, $usage, $staff)
+                : $this->distributeByScore($students, $classrooms, $usage, $staff);
 
             Log::info('Distribución académica ejecutada', ['staff_id' => $staff->id, 'academic_cycle_id' => $academicCycleId, 'assigned' => $assigned, 'respect_academic_groups' => $respectAcademicGroups]);
 
             return ['asignados' => $assigned, 'sin_cupo' => $withoutCapacity];
         });
+    }
+
+    private function distributeByScore($students, Collection $classrooms, $usage, Staff $staff): array
+    {
+        $assigned = 0;
+        $withoutCapacity = 0;
+
+        foreach ($students as $assignment) {
+            $target = $classrooms->first(function (Classroom $classroom) use (&$usage): bool {
+                return (int) ($usage[$classroom->id] ?? 0) < (int) $classroom->capacity;
+            });
+
+            if ($target === null) {
+                $withoutCapacity++;
+
+                continue;
+            }
+
+            $this->assignToClassroom($assignment, $target, $usage, $staff);
+            $assigned++;
+        }
+
+        return [$assigned, $withoutCapacity];
+    }
+
+    private function distributeRespectingAcademicGroups($students, Collection $classrooms, $usage, Staff $staff): array
+    {
+        $pending = $this->pendingStudentsByAcademicGroup($students);
+        $closedClassroomIds = [];
+        $assigned = 0;
+
+        foreach (array_keys($pending) as $group) {
+            while (count($pending[$group]) > 0) {
+                $target = $this->nextAvailableClassroom($classrooms, $usage, $closedClassroomIds);
+                if ($target === null) {
+                    return [$assigned, $this->pendingStudentCount($pending)];
+                }
+
+                $available = (int) $target->capacity - (int) ($usage[$target->id] ?? 0);
+                $selected = array_splice($pending[$group], 0, $available);
+
+                if (count($pending[$group]) === 0 && count($selected) < $available && count($selected) < self::MIN_GROUP_REMAINDER_TO_KEEP_SEPARATE) {
+                    $selected = $this->fillWithCompatibleGroups($selected, $pending, $group, $available);
+                    $selected = $this->fillWithAnyGroup($selected, $pending, $group, $available);
+                }
+
+                foreach ($selected as $assignment) {
+                    $this->assignToClassroom($assignment, $target, $usage, $staff);
+                    $assigned++;
+                }
+
+                $closedClassroomIds[$target->id] = true;
+            }
+        }
+
+        return [$assigned, 0];
+    }
+
+    private function pendingStudentsByAcademicGroup($students): array
+    {
+        $groupOrder = array_keys(AcademicGroupCatalog::groups());
+        $pending = array_fill_keys([...$groupOrder, 'ungrouped'], []);
+
+        $students
+            ->sort(function (StudentClassroomAssignment $a, StudentClassroomAssignment $b) use ($groupOrder): int {
+                $order = array_flip($groupOrder);
+                $leftGroup = AcademicGroupCatalog::groupForCareerCode($a->student?->career?->code) ?? 'ungrouped';
+                $rightGroup = AcademicGroupCatalog::groupForCareerCode($b->student?->career?->code) ?? 'ungrouped';
+
+                return [
+                    $order[$leftGroup] ?? 999,
+                    -1 * (float) $a->placement_score,
+                    (int) $a->student_id,
+                ] <=> [
+                    $order[$rightGroup] ?? 999,
+                    -1 * (float) $b->placement_score,
+                    (int) $b->student_id,
+                ];
+            })
+            ->each(function (StudentClassroomAssignment $assignment) use (&$pending): void {
+                $group = AcademicGroupCatalog::groupForCareerCode($assignment->student?->career?->code) ?? 'ungrouped';
+                $pending[$group][] = $assignment;
+            });
+
+        return $pending;
+    }
+
+    private function fillWithCompatibleGroups(array $selected, array &$pending, string $group, int $capacity): array
+    {
+        foreach (AcademicGroupCatalog::compatibleGroups($group) as $compatible) {
+            while (count($selected) < $capacity && count($pending[$compatible] ?? []) > 0) {
+                $selected[] = array_shift($pending[$compatible]);
+            }
+        }
+
+        return $selected;
+    }
+
+    private function fillWithAnyGroup(array $selected, array &$pending, string $group, int $capacity): array
+    {
+        foreach (array_keys($pending) as $candidate) {
+            if ($candidate === $group || in_array($candidate, AcademicGroupCatalog::compatibleGroups($group), true)) {
+                continue;
+            }
+
+            while (count($selected) < $capacity && count($pending[$candidate]) > 0) {
+                $selected[] = array_shift($pending[$candidate]);
+            }
+        }
+
+        return $selected;
+    }
+
+    private function nextAvailableClassroom(Collection $classrooms, $usage, array $closedClassroomIds): ?Classroom
+    {
+        return $classrooms->first(function (Classroom $classroom) use ($usage, $closedClassroomIds): bool {
+            return ! isset($closedClassroomIds[$classroom->id])
+                && (int) ($usage[$classroom->id] ?? 0) < (int) $classroom->capacity;
+        });
+    }
+
+    private function assignToClassroom(StudentClassroomAssignment $assignment, Classroom $classroom, $usage, Staff $staff): void
+    {
+        $assignment->update([
+            'classroom_id' => $classroom->id,
+            'assigned_by' => $staff->id,
+            'assigned_at' => now(),
+        ]);
+        $usage[$classroom->id] = (int) ($usage[$classroom->id] ?? 0) + 1;
+    }
+
+    private function pendingStudentCount(array $pending): int
+    {
+        return array_sum(array_map('count', $pending));
     }
 
     public function moveStudent(int $academicCycleId, int $studentId, int $classroomId, Staff $staff, ?string $reason = null): void
