@@ -36,7 +36,7 @@
             </div>
         </div>
         <p class="mx-auto mt-10 max-w-7xl border-t border-on-primary-fixed-variant/30 px-margin-mobile pt-6 text-center text-xs text-primary-fixed/70 lg:px-margin-desktop lg:text-left">
-            © {{ date('Y') }} {{ config('app.name') }}. Todos los derechos reservados.
+            © {{ date('Y') }} {{ config('app.name') }}. Hecho por ElberJesus. Todos los derechos reservados.
         </p>
     </footer>
 </body>

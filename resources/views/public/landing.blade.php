@@ -43,6 +43,15 @@
                         <span class="material-symbols-outlined text-lg">school</span>
                         Ver carreras
                     </a>
+                    @if ($publicResultsEnabled)
+                        <a
+                            href="{{ route('public.results') }}"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl border border-white/40 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur transition hover:bg-white/20 active:scale-[0.98]"
+                        >
+                            <span class="material-symbols-outlined text-lg">leaderboard</span>
+                            Consultar resultados
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>

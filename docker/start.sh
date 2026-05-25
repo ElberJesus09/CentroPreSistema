@@ -10,8 +10,12 @@ envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/con
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-php artisan migrate --force
-php artisan db:seed --force
+if [ "${RESET_DATABASE_ON_DEPLOY:-false}" = "true" ]; then
+    php artisan migrate:fresh --seed --force
+else
+    php artisan migrate --force
+    php artisan db:seed --force
+fi
 
 php-fpm -D
 nginx -g 'daemon off;'

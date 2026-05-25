@@ -1,7 +1,9 @@
 @php
     $name = request()->route()?->getName() ?? '';
+    $publicResultsEnabled = \App\Models\ExamSetting::singleton()->public_results_enabled;
     $current = match (true) {
         str_starts_with($name, 'registration') => 'registration',
+        $name === 'public.results' => 'results',
         $name === 'careers' => 'careers',
         $name === 'campuses' => 'campuses',
         $name === 'home' => 'home',
@@ -23,7 +25,6 @@
             </span>
             <span>
                 <span class="block font-display text-base font-bold leading-tight text-primary sm:text-lg">{{ config('app.name') }}</span>
-                <span class="hidden text-xs font-medium text-on-surface-variant sm:block">Admisión UNPRG</span>
             </span>
         </a>
 
@@ -40,6 +41,11 @@
             <a href="{{ route('campuses') }}" class="{{ $linkBase }} {{ $current === 'campuses' ? $linkActive : $linkIdle }}">
                 Sedes
             </a>
+            @if ($publicResultsEnabled)
+                <a href="{{ route('public.results') }}" class="{{ $linkBase }} {{ $current === 'results' ? $linkActive : $linkIdle }}">
+                    Resultados
+                </a>
+            @endif
         </nav>
 
         <div class="flex items-center gap-3">
@@ -65,6 +71,9 @@
                     <a href="{{ route('registration.start') }}" class="block px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-high">Inscripción</a>
                     <a href="{{ route('careers') }}" class="block px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-high">Carreras</a>
                     <a href="{{ route('campuses') }}" class="block px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-high">Sedes</a>
+                    @if ($publicResultsEnabled)
+                        <a href="{{ route('public.results') }}" class="block px-4 py-2.5 text-sm font-medium text-on-surface hover:bg-surface-container-high">Resultados</a>
+                    @endif
                     <a
                         href="{{ route('registration.start') }}"
                         class="mx-2 mt-2 flex items-center justify-center gap-2 rounded-lg bg-primary py-2 text-center text-sm font-semibold text-on-primary"

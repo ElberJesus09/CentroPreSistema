@@ -11,9 +11,17 @@
     </style>
 </head>
 <body>
-    <h1>Reporte académico</h1>
+    <h1>Reporte academico</h1>
     <p>Generado: {{ $generatedAt->format('Y-m-d H:i') }}</p>
-    <p>Promedio general: {{ number_format($report['promedio_general'], 2) }} · Destacados: {{ $report['destacados']->count() }} · Desaprobados: {{ $report['desaprobados']->count() }}</p>
+    <p>Promedio general: {{ number_format($report['promedio_general'], 2) }} - Destacados: {{ $report['destacados']->count() }} - Desaprobados: {{ $report['desaprobados']->count() }}</p>
+    <table>
+        <thead><tr><th>Carrera</th><th>Total</th><th>Promedio</th><th>Destacados</th><th>Desaprobados</th></tr></thead>
+        <tbody>
+            @foreach ($report['resumen_carrera'] as $careerName => $summary)
+                <tr><td>{{ $careerName }}</td><td>{{ $summary['total'] }}</td><td>{{ number_format($summary['promedio'], 2) }}</td><td>{{ $summary['destacados'] }}</td><td>{{ $summary['desaprobados'] }}</td></tr>
+            @endforeach
+        </tbody>
+    </table>
     <table>
         <thead><tr><th>Ranking</th><th>DNI</th><th>Alumno</th><th>Carrera</th><th>Turno</th><th>Aula</th><th>Promedio</th></tr></thead>
         <tbody>

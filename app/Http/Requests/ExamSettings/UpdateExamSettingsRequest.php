@@ -24,6 +24,7 @@ class UpdateExamSettingsRequest extends FormRequest
             'exam_location' => ['nullable', 'string', 'max:500'],
             'institutional_message' => ['nullable', 'string', 'max:5000'],
             'registration_mail_enabled' => ['sometimes', 'boolean'],
+            'public_results_enabled' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -36,6 +37,7 @@ class UpdateExamSettingsRequest extends FormRequest
             }
         }
         $merge['registration_mail_enabled'] = $this->boolean('registration_mail_enabled');
+        $merge['public_results_enabled'] = $this->boolean('public_results_enabled');
         $this->merge($merge);
     }
 }

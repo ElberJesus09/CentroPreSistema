@@ -8,6 +8,7 @@ use App\Http\Requests\Academic\MoveStudentRequest;
 use App\Models\StudentClassroomAssignment;
 use App\Services\Academic\AcademicDistributionService;
 use App\Services\Academic\ClassroomService;
+use App\Support\Academic\AcademicGroupCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -21,6 +22,7 @@ class DistributionController extends Controller
         $filters = [
             'search' => mb_substr(trim((string) $request->query('search', '')), 0, 100),
             'classroom_id' => $this->optionalInt($request->query('classroom_id')),
+            'academic_group' => $this->academicGroup($request->query('academic_group')),
             'per_page' => $this->optionalInt($request->query('per_page')) ?? 50,
         ];
 
@@ -30,6 +32,7 @@ class DistributionController extends Controller
             'filters' => $filters,
             'dashboard' => $cycleId === null ? null : $service->dashboard($cycleId, $filters),
             'activeClassrooms' => $cycleId === null ? collect() : $service->activeClassrooms($cycleId),
+            'academicGroups' => AcademicGroupCatalog::groups(),
         ]);
     }
 
@@ -77,9 +80,15 @@ class DistributionController extends Controller
         $request->validate([
             'academic_cycle_id' => ['required', 'integer', 'exists:academic_cycles,id'],
             'regenerate' => ['nullable', 'boolean'],
+            'respect_academic_groups' => ['nullable', 'boolean'],
         ]);
 
-        $report = $service->distribute($request->integer('academic_cycle_id'), $request->user(), $request->boolean('regenerate'));
+        $report = $service->distribute(
+            $request->integer('academic_cycle_id'),
+            $request->user(),
+            $request->boolean('regenerate'),
+            $request->boolean('respect_academic_groups'),
+        );
 
         return back()->with('success', "Distribución completada: {$report['asignados']} alumnos asignados, {$report['sin_cupo']} sin cupo.");
     }
@@ -116,5 +125,12 @@ class DistributionController extends Controller
         $i = filter_var($value, FILTER_VALIDATE_INT);
 
         return $i === false ? null : $i;
+    }
+
+    private function academicGroup(mixed $value): ?string
+    {
+        $value = is_string($value) ? trim($value) : '';
+
+        return array_key_exists($value, AcademicGroupCatalog::groups()) ? $value : null;
     }
 }

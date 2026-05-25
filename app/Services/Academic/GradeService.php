@@ -3,6 +3,7 @@
 namespace App\Services\Academic;
 
 use App\Models\AcademicCycle;
+use App\Models\Career;
 use App\Models\Classroom;
 use App\Models\Evaluation;
 use App\Models\Grade;
@@ -184,18 +185,24 @@ class GradeService
         $this->ensureDefaultEvaluations($academicCycleId);
 
         $evaluations = Evaluation::query()->where('academic_cycle_id', $academicCycleId)->get();
-        $rankings = $this->rankingsForCycle($academicCycleId, $evaluations);
         $rows = $this->studentReportRows($academicCycleId, $filters, $evaluations);
 
         return [
             'ranking_general' => $rows->sortBy('ranking')->take(100)->values(),
             'ranking_aula' => $rows->groupBy('aula')->map(fn ($group) => $group->sortBy('ranking')->take(20)->values()),
             'ranking_carrera' => $rows->groupBy('carrera')->map(fn ($group) => $group->sortBy('ranking')->take(20)->values()),
+            'resumen_carrera' => $rows->groupBy('carrera')->map(fn ($group) => [
+                'total' => $group->count(),
+                'promedio' => round((float) $group->avg('promedio'), 2),
+                'destacados' => $group->where('promedio', '>=', 16)->count(),
+                'desaprobados' => $group->where('promedio', '<', 11)->count(),
+                'ranking' => $group->sortBy('ranking')->take(10)->values(),
+            ])->sortKeys(),
             'ranking_turno' => $rows->groupBy('turno')->map(fn ($group) => $group->sortBy('ranking')->take(20)->values()),
             'promedio_general' => round((float) $rows->avg('promedio'), 2),
             'desaprobados' => $rows->where('promedio', '<', 11)->values(),
             'destacados' => $rows->where('promedio', '>=', 16)->values(),
-            'rankings' => $rankings,
+            'rankings' => $rows->mapWithKeys(fn ($row) => [$row->student_id => ['promedio' => $row->promedio, 'ranking' => $row->ranking]])->all(),
         ];
     }
 
@@ -214,9 +221,90 @@ class GradeService
         }, $filename, ['Content-Type' => 'application/vnd.ms-excel; charset=UTF-8']);
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function publicResultForDni(string $dni): ?array
+    {
+        if (! preg_match('/^\d{8}$/', $dni)) {
+            return null;
+        }
+
+        $student = Student::query()
+            ->where('dni', $dni)
+            ->where('status', Student::STATUS_ACTIVE)
+            ->with([
+                'career:id,name',
+                'academicCycle:id,name',
+                'grades.evaluation:id,name,academic_cycle_id',
+            ])
+            ->orderByDesc('academic_cycle_id')
+            ->orderByDesc('registration_date')
+            ->first();
+
+        if ($student === null) {
+            return null;
+        }
+
+        $this->ensureDefaultEvaluations((int) $student->academic_cycle_id);
+        $evaluations = Evaluation::query()
+            ->where('academic_cycle_id', $student->academic_cycle_id)
+            ->where('counts_for_average', true)
+            ->get();
+
+        $rows = Student::query()
+            ->where('academic_cycle_id', $student->academic_cycle_id)
+            ->where('career_id', $student->career_id)
+            ->where('status', Student::STATUS_ACTIVE)
+            ->with(['grades' => fn ($q) => $q->whereIn('evaluation_id', $evaluations->pluck('id'))->with('evaluation')])
+            ->get(['id', 'first_name', 'last_name', 'mother_last_name', 'dni'])
+            ->map(fn (Student $row) => (object) [
+                'id' => $row->id,
+                'dni' => $row->dni,
+                'alumno' => $row->fullName(),
+                'promedio' => $this->average($row, $evaluations),
+            ])
+            ->sortBy([
+                ['promedio', 'desc'],
+                ['alumno', 'asc'],
+                ['dni', 'asc'],
+            ])
+            ->values()
+            ->map(function (object $row, int $index): object {
+                $row->puesto = $index + 1;
+
+                return $row;
+            });
+
+        $result = $rows->firstWhere('id', $student->id);
+
+        return [
+            'student' => $student,
+            'average' => (float) ($result?->promedio ?? 0),
+            'rank' => $result?->puesto,
+            'grades' => Evaluation::query()
+                ->where('academic_cycle_id', $student->academic_cycle_id)
+                ->orderBy('id')
+                ->get(['id', 'name'])
+                ->map(function (Evaluation $evaluation) use ($student): array {
+                    $grade = $student->grades->firstWhere('evaluation_id', $evaluation->id);
+
+                    return [
+                        'name' => $evaluation->name,
+                        'score' => $grade?->score,
+                    ];
+                }),
+        ];
+    }
+
     public function cycles(): Collection
     {
         return AcademicCycle::query()->orderByDesc('start_date')->orderByDesc('id')->get(['id', 'name']);
+    }
+
+    public function careers(): Collection
+    {
+        return Career::query()->where('status', true)->orderBy('name')->get(['id', 'name']);
     }
 
     public function classrooms(int $academicCycleId): Collection
@@ -294,24 +382,39 @@ class GradeService
 
     private function studentReportRows(int $academicCycleId, array $filters, Collection $evaluations)
     {
-        $rankings = $this->rankingsForCycle($academicCycleId, $evaluations);
-
         return $this->studentQuery($academicCycleId, $filters)
-            ->with(['career:id,name', 'schedule.shift:id,name', 'classroomAssignments' => fn ($q) => $q->where('academic_cycle_id', $academicCycleId)->with('classroom:id,name')])
+            ->with([
+                'career:id,name',
+                'schedule.shift:id,name',
+                'classroomAssignments' => fn ($q) => $q->where('academic_cycle_id', $academicCycleId)->with('classroom:id,name'),
+                'grades' => fn ($q) => $q->whereIn('evaluation_id', $evaluations->pluck('id'))->with('evaluation'),
+            ])
             ->limit(2000)
             ->get()
-            ->map(function (Student $student) use ($rankings) {
+            ->map(function (Student $student) use ($evaluations) {
                 $assignment = $student->classroomAssignments->first();
 
                 return (object) [
+                    'student_id' => $student->id,
                     'dni' => $student->dni,
                     'alumno' => $student->fullName(),
                     'carrera' => $student->career?->name ?? 'Sin carrera',
                     'turno' => $student->schedule?->shift?->name ?? 'Sin turno',
                     'aula' => $assignment?->classroom?->name ?? 'Sin aula',
-                    'promedio' => $rankings[$student->id]['promedio'] ?? 0,
-                    'ranking' => $rankings[$student->id]['ranking'] ?? null,
+                    'promedio' => $this->average($student, $evaluations),
+                    'ranking' => null,
                 ];
+            })
+            ->sortBy([
+                ['promedio', 'desc'],
+                ['alumno', 'asc'],
+                ['dni', 'asc'],
+            ])
+            ->values()
+            ->map(function (object $row, int $index): object {
+                $row->ranking = $index + 1;
+
+                return $row;
             });
     }
 

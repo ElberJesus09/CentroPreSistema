@@ -10,21 +10,30 @@
         </div>
         @if ($cycleId)
             <div class="flex gap-2">
-                <a href="{{ route('academic.reports.excel', ['academic_cycle_id' => $cycleId]) }}" class="rounded-lg border border-outline-variant px-4 py-2 text-sm font-semibold text-primary">Exportar Excel</a>
-                <a href="{{ route('academic.reports.pdf', ['academic_cycle_id' => $cycleId]) }}" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary">Exportar PDF</a>
+                <a href="{{ route('academic.reports.excel', ['academic_cycle_id' => $cycleId, 'career_id' => $filters['career_id'] ?? null]) }}" class="rounded-lg border border-outline-variant px-4 py-2 text-sm font-semibold text-primary">Exportar Excel</a>
+                <a href="{{ route('academic.reports.pdf', ['academic_cycle_id' => $cycleId, 'career_id' => $filters['career_id'] ?? null]) }}" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary">Exportar PDF</a>
             </div>
         @endif
     </div>
-    <form method="get" class="mb-5 rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-4">
-        <label class="mb-1 block text-xs font-bold uppercase text-on-surface-variant">Ciclo</label>
-        <div class="flex gap-2">
-            <select name="academic_cycle_id" class="block w-full max-w-sm rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm">
+    <form method="get" class="mb-5 grid gap-3 rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
+        <div>
+            <label class="mb-1 block text-xs font-bold uppercase text-on-surface-variant">Ciclo</label>
+            <select name="academic_cycle_id" class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm">
                 @foreach ($cycles as $cycle)
                     <option value="{{ $cycle->id }}" @selected((int) $cycleId === (int) $cycle->id)>{{ $cycle->name }}</option>
                 @endforeach
             </select>
-            <x-button type="submit">Ver reporte</x-button>
         </div>
+        <div>
+            <label class="mb-1 block text-xs font-bold uppercase text-on-surface-variant">Carrera</label>
+            <select name="career_id" class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm">
+                <option value="">Todas</option>
+                @foreach ($careers as $career)
+                    <option value="{{ $career->id }}" @selected((int) ($filters['career_id'] ?? 0) === (int) $career->id)>{{ $career->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <x-button type="submit">Ver reporte</x-button>
     </form>
     @if ($report)
         <div class="mb-5 grid gap-4 md:grid-cols-3">

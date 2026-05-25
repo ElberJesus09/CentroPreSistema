@@ -13,6 +13,7 @@ class ExamSetting extends Model
         'exam_location',
         'institutional_message',
         'registration_mail_enabled',
+        'public_results_enabled',
     ];
 
     /** Fila unica editable desde administracion. */
@@ -27,6 +28,7 @@ class ExamSetting extends Model
                 'exam_location' => null,
                 'institutional_message' => null,
                 'registration_mail_enabled' => true,
+                'public_results_enabled' => false,
             ],
         );
 
@@ -38,6 +40,7 @@ class ExamSetting extends Model
         return [
             'exam_date' => 'date',
             'registration_mail_enabled' => 'boolean',
+            'public_results_enabled' => 'boolean',
         ];
     }
 }

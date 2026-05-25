@@ -36,6 +36,28 @@
                     </div>
                 </div>
 
+                <div class="rounded-lg border border-outline-variant bg-white p-4">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-on-surface">Consulta publica de resultados</p>
+                            <p class="mt-1 text-xs leading-relaxed text-on-surface-variant">
+                                Si esta activado, el portal mostrara una opcion para que el alumno consulte su promedio y puesto por carrera con su DNI.
+                            </p>
+                        </div>
+                        <label for="public_results_enabled" class="inline-flex cursor-pointer items-center gap-3">
+                            <input
+                                type="checkbox"
+                                name="public_results_enabled"
+                                id="public_results_enabled"
+                                value="1"
+                                @checked(old('public_results_enabled', $examSetting->public_results_enabled))
+                                class="h-5 w-5 rounded border-outline-variant text-primary focus:ring-primary"
+                            />
+                            <span class="text-sm font-semibold text-on-surface">Activado</span>
+                        </label>
+                    </div>
+                </div>
+
                 <div>
                     <label for="exam_date" class="block text-sm font-semibold text-on-surface-variant">Fecha del examen</label>
                     <input
@@ -98,6 +120,13 @@
                 'border-secondary-container/50 bg-secondary-container/20 text-on-secondary-container' => ! $examSetting->registration_mail_enabled,
             ])>
                 {{ $examSetting->registration_mail_enabled ? 'El correo automatico esta activado.' : 'El correo automatico esta desactivado; el registro mostrara descargas directas.' }}
+            </div>
+            <div @class([
+                'mb-5 rounded-lg border px-4 py-3 text-sm',
+                'border-emerald-200 bg-emerald-50 text-emerald-950' => $examSetting->public_results_enabled,
+                'border-secondary-container/50 bg-secondary-container/20 text-on-secondary-container' => ! $examSetting->public_results_enabled,
+            ])>
+                {{ $examSetting->public_results_enabled ? 'La consulta publica de resultados esta activada.' : 'La consulta publica de resultados esta desactivada.' }}
             </div>
 
             <div class="overflow-hidden rounded-lg border border-outline-variant bg-white">

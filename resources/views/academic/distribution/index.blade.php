@@ -99,7 +99,7 @@
         @endpush
     @endif
 
-    <form method="get" class="mb-5 grid gap-3 rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
+    <form method="get" class="mb-5 grid gap-3 rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-4 md:grid-cols-[1fr_1fr_1fr_1fr_auto] md:items-end">
         <div>
             <label class="mb-1 block text-xs font-bold uppercase text-on-surface-variant">Ciclo</label>
             <select name="academic_cycle_id" class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm">
@@ -114,6 +114,15 @@
                 <option value="">Todas</option>
                 @foreach ($activeClassrooms as $classroom)
                     <option value="{{ $classroom->id }}" @selected((int) ($filters['classroom_id'] ?? 0) === (int) $classroom->id)>{{ $classroom->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label class="mb-1 block text-xs font-bold uppercase text-on-surface-variant">Grupo academico</label>
+            <select name="academic_group" class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2 text-sm">
+                <option value="">Todos</option>
+                @foreach ($academicGroups as $key => $label)
+                    <option value="{{ $key }}" @selected(($filters['academic_group'] ?? '') === $key)>{{ $label }}</option>
                 @endforeach
             </select>
         </div>
@@ -150,6 +159,10 @@
                     <input type="checkbox" name="regenerate" value="1">
                     Regenerar distribución no bloqueada
                 </label>
+                <label class="mb-3 flex items-center gap-2 text-sm">
+                    <input type="checkbox" name="respect_academic_groups" value="1">
+                    Respetar grupos academicos
+                </label>
                 <x-button type="submit">Distribuir alumnos</x-button>
             </form>
         </div>
@@ -183,6 +196,7 @@
                 <tr>
                     <th class="px-4 py-3">Alumno</th>
                     <th class="px-4 py-3">DNI</th>
+                    <th class="px-4 py-3">Grupo academico</th>
                     <th class="px-4 py-3">Nota ubicación</th>
                     <th class="px-4 py-3">Aula</th>
                     <th class="px-4 py-3">Estado</th>
@@ -194,6 +208,7 @@
                     <tr>
                         <td class="px-4 py-3 font-semibold">{{ $assignment->student?->fullName() }}</td>
                         <td class="px-4 py-3">{{ $assignment->student?->dni }}</td>
+                        <td class="px-4 py-3">{{ \App\Support\Academic\AcademicGroupCatalog::groupNameForCareerCode($assignment->student?->career?->code) }}</td>
                         <td class="px-4 py-3">{{ number_format((float) $assignment->placement_score, 2) }}</td>
                         <td class="px-4 py-3">{{ $assignment->classroom?->name ?? 'Sin aula' }}</td>
                         <td class="px-4 py-3">
@@ -228,7 +243,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-4 py-8 text-center text-sm text-on-surface-variant">No hay alumnos con nota de ubicación importada.</td>
+                        <td colspan="7" class="px-4 py-8 text-center text-sm text-on-surface-variant">No hay alumnos con nota de ubicación importada.</td>
                     </tr>
                 @endforelse
             </tbody>

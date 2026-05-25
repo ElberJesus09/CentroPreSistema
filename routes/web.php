@@ -16,6 +16,7 @@ use App\Http\Controllers\ExamSettingsController;
 use App\Http\Controllers\Public\CampusCatalogController;
 use App\Http\Controllers\Public\CareerCatalogController;
 use App\Http\Controllers\Public\PublicHomeController;
+use App\Http\Controllers\Public\PublicResultController;
 use App\Http\Controllers\Public\RegistrationWizardController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ShiftController;
@@ -34,6 +35,9 @@ Route::get('/', PublicHomeController::class)->name('home');
 
 Route::get('/careers', CareerCatalogController::class)->name('careers');
 Route::get('/campuses', CampusCatalogController::class)->name('campuses');
+Route::get('/results', PublicResultController::class)
+    ->middleware('throttle:public-registration-lookup')
+    ->name('public.results');
 
 Route::redirect('/register', '/registration')->name('register');
 Route::redirect('/pre-registration', '/registration')->name('pre-registration.create');

@@ -15,28 +15,43 @@ class AcademicReportController extends Controller
     public function index(Request $request, GradeService $service): View
     {
         $cycleId = $this->optionalInt($request->query('academic_cycle_id')) ?? $service->cycles()->first()?->id;
-        $report = $cycleId === null ? null : $service->reports($cycleId, []);
+        $filters = [
+            'career_id' => $this->optionalInt($request->query('career_id')),
+        ];
+        $report = $cycleId === null ? null : $service->reports($cycleId, $filters);
 
         return view('academic.reports.index', [
             'cycles' => $service->cycles(),
+            'careers' => $service->careers(),
             'cycleId' => $cycleId,
+            'filters' => $filters,
             'report' => $report,
         ]);
     }
 
     public function excel(Request $request, GradeService $service): StreamedResponse
     {
-        $request->validate(['academic_cycle_id' => ['required', 'integer', 'exists:academic_cycles,id']]);
+        $request->validate([
+            'academic_cycle_id' => ['required', 'integer', 'exists:academic_cycles,id'],
+            'career_id' => ['nullable', 'integer', 'exists:careers,id'],
+        ]);
 
-        return $service->exportExcel($request->integer('academic_cycle_id'));
+        return $service->exportExcel($request->integer('academic_cycle_id'), [
+            'career_id' => $this->optionalInt($request->query('career_id')),
+        ]);
     }
 
     public function pdf(Request $request, GradeService $service): Response
     {
-        $request->validate(['academic_cycle_id' => ['required', 'integer', 'exists:academic_cycles,id']]);
+        $request->validate([
+            'academic_cycle_id' => ['required', 'integer', 'exists:academic_cycles,id'],
+            'career_id' => ['nullable', 'integer', 'exists:careers,id'],
+        ]);
 
         $pdf = Pdf::loadView('pdf.academic.report', [
-            'report' => $service->reports($request->integer('academic_cycle_id')),
+            'report' => $service->reports($request->integer('academic_cycle_id'), [
+                'career_id' => $this->optionalInt($request->query('career_id')),
+            ]),
             'generatedAt' => now(),
         ])->setPaper('a4', 'landscape');
 

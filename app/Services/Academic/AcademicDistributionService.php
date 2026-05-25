@@ -9,6 +9,7 @@ use App\Models\Grade;
 use App\Models\Staff;
 use App\Models\Student;
 use App\Models\StudentClassroomAssignment;
+use App\Support\Academic\AcademicGroupCatalog;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
@@ -167,9 +168,9 @@ class AcademicDistributionService
         return $report;
     }
 
-    public function distribute(int $academicCycleId, Staff $staff, bool $regenerate = false): array
+    public function distribute(int $academicCycleId, Staff $staff, bool $regenerate = false, bool $respectAcademicGroups = false): array
     {
-        return DB::transaction(function () use ($academicCycleId, $staff, $regenerate): array {
+        return DB::transaction(function () use ($academicCycleId, $staff, $regenerate, $respectAcademicGroups): array {
             $classrooms = Classroom::query()
                 ->where('academic_cycle_id', $academicCycleId)
                 ->where('status', true)
@@ -198,11 +199,31 @@ class AcademicDistributionService
                 ->where(function ($q): void {
                     $q->whereNull('classroom_id')->orWhereDoesntHave('classroom');
                 })
-                ->with('student:id,first_name,last_name,mother_last_name,dni')
+                ->with('student:id,first_name,last_name,mother_last_name,dni,career_id', 'student.career:id,code')
                 ->orderByDesc('placement_score')
                 ->orderBy('student_id')
                 ->lockForUpdate()
                 ->get();
+
+            if ($respectAcademicGroups) {
+                $groupOrder = array_flip(array_keys(AcademicGroupCatalog::groups()));
+                $students = $students
+                    ->sort(function (StudentClassroomAssignment $a, StudentClassroomAssignment $b) use ($groupOrder): int {
+                        $left = [
+                            $groupOrder[AcademicGroupCatalog::groupForCareerCode($a->student?->career?->code) ?? ''] ?? 999,
+                            -1 * (float) $a->placement_score,
+                            (int) $a->student_id,
+                        ];
+                        $right = [
+                            $groupOrder[AcademicGroupCatalog::groupForCareerCode($b->student?->career?->code) ?? ''] ?? 999,
+                            -1 * (float) $b->placement_score,
+                            (int) $b->student_id,
+                        ];
+
+                        return $left <=> $right;
+                    })
+                    ->values();
+            }
 
             $assigned = 0;
             $withoutCapacity = 0;
@@ -234,7 +255,7 @@ class AcademicDistributionService
                 $assigned++;
             }
 
-            Log::info('Distribución académica ejecutada', ['staff_id' => $staff->id, 'academic_cycle_id' => $academicCycleId, 'assigned' => $assigned]);
+            Log::info('Distribución académica ejecutada', ['staff_id' => $staff->id, 'academic_cycle_id' => $academicCycleId, 'assigned' => $assigned, 'respect_academic_groups' => $respectAcademicGroups]);
 
             return ['asignados' => $assigned, 'sin_cupo' => $withoutCapacity];
         });
@@ -309,8 +330,12 @@ class AcademicDistributionService
         return StudentClassroomAssignment::query()
             ->where('academic_cycle_id', $academicCycleId)
             ->whereHas('student', fn ($query) => $query->where('status', Student::STATUS_ACTIVE))
-            ->with(['student.career:id,name', 'student.schedule.shift:id,name', 'classroom:id,name,code,capacity,status'])
+            ->with(['student.career:id,name,code', 'student.schedule.shift:id,name', 'classroom:id,name,code,capacity,status'])
             ->when($filters['classroom_id'] ?? null, fn ($q, int $id) => $q->where('classroom_id', $id))
+            ->when($filters['academic_group'] ?? null, function ($q, string $group): void {
+                $codes = AcademicGroupCatalog::careerCodesByGroup()[$group] ?? [];
+                $q->whereHas('student.career', fn ($career) => $career->whereIn('code', $codes));
+            })
             ->when(($filters['search'] ?? '') !== '', function ($q) use ($filters): void {
                 $search = $filters['search'];
                 $q->whereHas('student', fn ($s) => $s

@@ -6,7 +6,7 @@
     <div class="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
             <h1 class="font-display text-2xl font-bold text-primary">Notas Académicas</h1>
-            <p class="text-sm text-on-surface-variant">Evaluaciones flexibles, promedios ponderados y rankings.</p>
+            <p class="text-sm text-on-surface-variant">Evaluaciones flexibles y promedios ponderados.</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('academic.distribution.index', ['academic_cycle_id' => $cycleId]) }}" class="rounded-lg border border-outline-variant px-4 py-2 text-sm font-semibold text-primary">Distribución</a>
@@ -249,12 +249,11 @@
                         <th class="px-4 py-3">{{ $evaluation->name }}</th>
                     @endforeach
                     <th class="px-4 py-3">Promedio</th>
-                    <th class="px-4 py-3">Ranking</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant/50">
                 @forelse ($overview['students'] as $student)
-                    @php $grades = $student->grades->keyBy('evaluation_id'); $rank = $overview['rankings'][$student->id] ?? ['promedio' => 0, 'ranking' => null]; @endphp
+                    @php $grades = $student->grades->keyBy('evaluation_id'); $average = $overview['rankings'][$student->id]['promedio'] ?? 0; @endphp
                     <tr>
                         <td class="px-4 py-3">{{ $student->dni }}</td>
                         <td class="min-w-[12rem] px-4 py-3 font-semibold">{{ $student->fullName() }}</td>
@@ -264,11 +263,10 @@
                         @foreach ($overview['evaluations'] as $evaluation)
                             <td class="px-4 py-3">{{ isset($grades[$evaluation->id]) ? number_format((float) $grades[$evaluation->id]->score, 2) : '—' }}</td>
                         @endforeach
-                        <td class="px-4 py-3 font-bold">{{ number_format((float) $rank['promedio'], 2) }}</td>
-                        <td class="px-4 py-3">{{ $rank['ranking'] ?? '—' }}</td>
+                        <td class="px-4 py-3 font-bold">{{ number_format((float) $average, 2) }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="{{ 7 + $overview['evaluations']->count() }}" class="px-4 py-8 text-center text-sm text-on-surface-variant">No hay alumnos para los filtros seleccionados.</td></tr>
+                    <tr><td colspan="{{ 6 + $overview['evaluations']->count() }}" class="px-4 py-8 text-center text-sm text-on-surface-variant">No hay alumnos para los filtros seleccionados.</td></tr>
                 @endforelse
             </tbody>
         </x-table.shell>
