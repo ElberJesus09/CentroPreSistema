@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests\PublicRegistration;
 
+use App\Http\Requests\Concerns\ValidatesStudentRegistrationPayload;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RegistrationStep1Request extends FormRequest
 {
+    use ValidatesStudentRegistrationPayload;
+
     public function authorize(): bool
     {
         return true;
@@ -21,7 +24,7 @@ class RegistrationStep1Request extends FormRequest
             'student.last_name' => ['required', 'string', 'max:120'],
             'student.mother_last_name' => ['required', 'string', 'max:120'],
             'student.dni' => ['required', 'digits:8'],
-            'student.birth_date' => ['required', 'date'],
+            'student.birth_date' => $this->studentBirthDateRules(),
             'student.gender' => ['required', 'string', 'in:male,female'],
             'student.phone' => ['required', 'digits:9'],
             'student.address' => ['required', 'string', 'max:500'],

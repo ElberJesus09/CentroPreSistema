@@ -66,7 +66,7 @@ Route::get('/registration/complete', [RegistrationWizardController::class, 'comp
 
 Route::get('/registration/documents/{student}/{document}', [RegistrationWizardController::class, 'downloadDocument'])
     ->whereIn('document', ['enrollment_form', 'regulations'])
-    ->middleware(['signed', 'throttle:public-registration'])
+    ->middleware(['signed:relative', 'throttle:public-registration'])
     ->name('registration.documents.download');
 
 /*

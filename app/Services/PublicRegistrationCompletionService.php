@@ -32,11 +32,13 @@ class PublicRegistrationCompletionService
                         'registration.documents.download',
                         now()->addMinutes(30),
                         ['student' => $student, 'document' => 'enrollment_form'],
+                        absolute: false,
                     ),
                     'regulations' => URL::temporarySignedRoute(
                         'registration.documents.download',
                         now()->addMinutes(30),
                         ['student' => $student, 'document' => 'regulations'],
+                        absolute: false,
                     ),
                 ],
             );

@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 trait ValidatesStudentRegistrationPayload
 {
+    private const int MINIMUM_STUDENT_AGE = 15;
+
     /**
      * @return array<string, mixed>
      */
@@ -22,7 +24,7 @@ trait ValidatesStudentRegistrationPayload
                 'digits:8',
                 $this->uniqueStudentDniForSelectedCycle($ignoreStudentId),
             ],
-            'student.birth_date' => ['required', 'date'],
+            'student.birth_date' => $this->studentBirthDateRules(),
             'student.gender' => ['required', 'string', Rule::in(['male', 'female'])],
             'student.phone' => ['required', 'digits:9'],
             'student.address' => ['required', 'string', 'max:500'],
@@ -49,6 +51,32 @@ trait ValidatesStudentRegistrationPayload
             'school.province' => ['required', 'string', 'max:120'],
             'school.district' => ['required', 'string', 'max:120'],
             'school.graduation_year' => ['required', 'integer', 'digits:4', 'min:1990', 'max:2100'],
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function studentBirthDateRules(): array
+    {
+        return [
+            'required',
+            'date',
+            'before_or_equal:'.now()->subYears(self::MINIMUM_STUDENT_AGE)->toDateString(),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'student.birth_date.before_or_equal' => 'Fecha de nacimiento incorrecta. El estudiante debe tener al menos 15 años.',
+            'student.dni.unique' => 'Este DNI ya tiene una inscripción registrada en el ciclo seleccionado.',
+            'student.payment_voucher_number.unique' => 'Este número de voucher ya fue registrado.',
+            'student.payment_voucher_number.regex' => 'El número de voucher solo debe contener dígitos.',
+            'student.payment_date.before_or_equal' => 'La fecha de pago no puede ser posterior a hoy.',
         ];
     }
 

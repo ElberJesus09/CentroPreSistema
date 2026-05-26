@@ -73,4 +73,16 @@ class RegistrationStep4Request extends FormRequest
             }
         });
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'student.payment_voucher_number.unique' => 'Este número de voucher ya fue registrado.',
+            'student.payment_voucher_number.regex' => 'El número de voucher solo debe contener dígitos.',
+            'student.payment_date.before_or_equal' => 'La fecha de pago no puede ser posterior a hoy.',
+        ];
+    }
 }

@@ -155,7 +155,11 @@ return [
     'ulid' => 'El campo :attribute debe ser un ULID válido.',
     'uuid' => 'El campo :attribute debe ser un UUID válido.',
 
-    'custom' => [],
+    'custom' => [
+        'student.birth_date' => [
+            'before_or_equal' => 'Fecha de nacimiento incorrecta. El estudiante debe tener al menos 15 años.',
+        ],
+    ],
 
     'attributes' => [
         'academic_cycle_shift_id' => 'turno académico',
