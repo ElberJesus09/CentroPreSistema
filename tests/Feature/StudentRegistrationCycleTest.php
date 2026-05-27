@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Requests\PublicRegistration\RegistrationStep1Request;
+use App\Http\Requests\PublicRegistration\RegistrationStep2Request;
+use App\Http\Requests\PublicRegistration\RegistrationStep3Request;
 use App\Http\Requests\PublicRegistration\RegistrationStep4Request;
 use App\Http\Requests\Student\StoreStudentRequest;
 use App\Models\AcademicCycle;
@@ -68,6 +70,10 @@ function publicStep1Payload(string $birthDate): array
             'address' => 'Av. Principal 123',
             'email' => 'ana@example.test',
         ],
+        'address_department' => 'Lambayeque',
+        'address_province' => 'Chiclayo',
+        'address_district' => 'Chiclayo',
+        'address_line' => 'Av. Principal 123',
     ];
 }
 
@@ -277,6 +283,10 @@ test('public document download links use relative signatures', function () {
         ->and($request->hasValidSignature())->toBeFalse();
 });
 
+test('registration mail is disabled by default', function () {
+    expect(ExamSetting::singleton()->registration_mail_enabled)->toBeFalse();
+});
+
 test('public registration rejects birth dates for students younger than fifteen', function () {
     Carbon::setTestNow('2026-05-26');
 
@@ -289,6 +299,155 @@ test('public registration rejects birth dates for students younger than fifteen'
     } finally {
         Carbon::setTestNow();
     }
+});
+
+test('public registration returns spanish messages for numeric fields', function () {
+    $step1 = new RegistrationStep1Request();
+    $step1Payload = publicStep1Payload('2008-01-15');
+    $step1Payload['student']['dni'] = '123';
+    $step1Payload['student']['phone'] = '987';
+
+    $step1Validator = Validator::make($step1Payload, $step1->rules(), $step1->messages());
+
+    expect($step1Validator->fails())->toBeTrue()
+        ->and($step1Validator->errors()->first('student.dni'))->toBe('El DNI del estudiante debe contener exactamente 8 dígitos.')
+        ->and($step1Validator->errors()->first('student.phone'))->toBe('El celular del estudiante debe contener exactamente 9 dígitos.');
+
+    $step2 = new RegistrationStep2Request();
+    $step2Validator = Validator::make([
+        'guardian' => [
+            'first_name' => 'Maria',
+            'last_name' => 'Lopez',
+            'mother_last_name' => 'Rios',
+            'dni' => '123',
+            'phone' => '987',
+            'relationship' => 'mother',
+        ],
+    ], $step2->rules(), $step2->messages());
+
+    expect($step2Validator->fails())->toBeTrue()
+        ->and($step2Validator->errors()->first('guardian.dni'))->toBe('El DNI del apoderado debe contener exactamente 8 dígitos.')
+        ->and($step2Validator->errors()->first('guardian.phone'))->toBe('El celular del apoderado debe contener exactamente 9 dígitos.');
+
+    $step3 = new RegistrationStep3Request();
+    $step3Validator = Validator::make([
+        'school' => [
+            'name' => 'Colegio Test',
+            'department' => 'Lambayeque',
+            'province' => 'Chiclayo',
+            'district' => 'Chiclayo',
+            'graduation_year' => '20',
+        ],
+    ], $step3->rules(), $step3->messages());
+
+    expect($step3Validator->fails())->toBeTrue()
+        ->and($step3Validator->errors()->first('school.graduation_year'))->toBe('El año de egreso debe contener exactamente 4 dígitos.');
+
+    $step4 = new RegistrationStep4Request();
+    $step4Validator = Validator::make([
+        'career_id' => 1,
+        'academic_cycle_shift_id' => 1,
+        'student' => [
+            'payment_voucher_number' => 'ABC123',
+            'payment_agency_number' => '12',
+            'payment_date' => '2026-01-15',
+        ],
+    ], $step4->rules(), $step4->messages());
+
+    expect($step4Validator->fails())->toBeTrue()
+        ->and($step4Validator->errors()->first('student.payment_voucher_number'))->toBe('El número de voucher solo debe contener dígitos.')
+        ->and($step4Validator->errors()->first('student.payment_agency_number'))->toBe('El número de agencia debe contener exactamente 4 dígitos.');
+});
+
+test('public registration builds student address from peru location fields', function () {
+    $this->post('/registration/step/1', publicStep1Payload('2008-01-15'))
+        ->assertRedirect('/registration/step/2')
+        ->assertSessionHas('public_registration.student.address', 'Av. Principal 123, Chiclayo, Chiclayo, Lambayeque')
+        ->assertSessionHas('public_registration.student_address.address_department', 'Lambayeque')
+        ->assertSessionHas('public_registration.student_address.address_province', 'Chiclayo')
+        ->assertSessionHas('public_registration.student_address.address_district', 'Chiclayo')
+        ->assertSessionHas('public_registration.student_address.address_line', 'Av. Principal 123');
+});
+
+test('public results returns spanish message for incomplete or long dni', function () {
+    ExamSetting::singleton()->update(['public_results_enabled' => true]);
+
+    $this->from('/results')
+        ->get('/results?dni=123')
+        ->assertRedirect('/results')
+        ->assertSessionHasErrors(['dni' => 'El DNI debe contener exactamente 8 dígitos.']);
+
+    $this->from('/results')
+        ->get('/results?dni=123456789')
+        ->assertRedirect('/results')
+        ->assertSessionHasErrors(['dni' => 'El DNI debe contener exactamente 8 dígitos.']);
+});
+
+test('public registration returns spanish messages for empty numeric fields', function () {
+    $step1 = new RegistrationStep1Request();
+    $step1Payload = publicStep1Payload('2008-01-15');
+    $step1Payload['student']['dni'] = '';
+    $step1Payload['student']['phone'] = '';
+
+    $step1Validator = Validator::make($step1Payload, $step1->rules(), $step1->messages());
+
+    expect($step1Validator->fails())->toBeTrue()
+        ->and($step1Validator->errors()->first('student.dni'))->toBe('Ingrese el DNI del estudiante.')
+        ->and($step1Validator->errors()->first('student.phone'))->toBe('Ingrese el celular del estudiante.');
+
+    $step2 = new RegistrationStep2Request();
+    $step2Validator = Validator::make([
+        'guardian' => [
+            'first_name' => 'Maria',
+            'last_name' => 'Lopez',
+            'mother_last_name' => 'Rios',
+            'dni' => '',
+            'phone' => '',
+            'relationship' => 'mother',
+        ],
+    ], $step2->rules(), $step2->messages());
+
+    expect($step2Validator->fails())->toBeTrue()
+        ->and($step2Validator->errors()->first('guardian.dni'))->toBe('Ingrese el DNI del apoderado.')
+        ->and($step2Validator->errors()->first('guardian.phone'))->toBe('Ingrese el celular del apoderado.');
+
+    $step3 = new RegistrationStep3Request();
+    $step3Validator = Validator::make([
+        'school' => [
+            'name' => 'Colegio Test',
+            'department' => 'Lambayeque',
+            'province' => 'Chiclayo',
+            'district' => 'Chiclayo',
+            'graduation_year' => '',
+        ],
+    ], $step3->rules(), $step3->messages());
+
+    expect($step3Validator->fails())->toBeTrue()
+        ->and($step3Validator->errors()->first('school.graduation_year'))->toBe('Ingrese el año de egreso.');
+
+    $step4 = new RegistrationStep4Request();
+    $step4Validator = Validator::make([
+        'career_id' => 1,
+        'academic_cycle_shift_id' => 1,
+        'student' => [
+            'payment_voucher_number' => '',
+            'payment_agency_number' => '',
+            'payment_date' => '2026-01-15',
+        ],
+    ], $step4->rules(), $step4->messages());
+
+    expect($step4Validator->fails())->toBeTrue()
+        ->and($step4Validator->errors()->first('student.payment_voucher_number'))->toBe('Ingrese el número de voucher.')
+        ->and($step4Validator->errors()->first('student.payment_agency_number'))->toBe('Ingrese el número de agencia.');
+});
+
+test('public results returns spanish message for empty dni', function () {
+    ExamSetting::singleton()->update(['public_results_enabled' => true]);
+
+    $this->from('/results')
+        ->get('/results?dni=')
+        ->assertRedirect('/results')
+        ->assertSessionHasErrors(['dni' => 'Ingrese su DNI para consultar sus resultados.']);
 });
 
 test('admin registration rejects birth dates for students younger than fifteen', function () {

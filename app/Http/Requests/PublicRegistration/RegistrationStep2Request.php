@@ -27,4 +27,17 @@ class RegistrationStep2Request extends FormRequest
             'botcheck' => ['prohibited'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'guardian.dni.required' => 'Ingrese el DNI del apoderado.',
+            'guardian.dni.digits' => 'El DNI del apoderado debe contener exactamente 8 dígitos.',
+            'guardian.phone.required' => 'Ingrese el celular del apoderado.',
+            'guardian.phone.digits' => 'El celular del apoderado debe contener exactamente 9 dígitos.',
+        ];
+    }
 }

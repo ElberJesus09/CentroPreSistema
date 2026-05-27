@@ -24,10 +24,8 @@
                     value="{{ old('dni', $dni) }}"
                     inputmode="numeric"
                     maxlength="8"
-                    pattern="\d{8}"
                     placeholder="12345678"
                     class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2.5 text-sm text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                    required
                 />
                 <x-button type="submit">Consultar</x-button>
             </div>

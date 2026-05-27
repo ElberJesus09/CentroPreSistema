@@ -74,8 +74,15 @@ class RegistrationWizardController extends Controller
 
     public function storeStep1(RegistrationStep1Request $request, StudentService $studentService): RedirectResponse
     {
+        $validated = $request->validated();
         $draft = $request->session()->get(self::SESSION_KEY, []);
-        $draft['student'] = $request->validated('student');
+        $draft['student'] = $validated['student'];
+        $draft['student_address'] = [
+            'address_department' => $validated['address_department'],
+            'address_province' => $validated['address_province'],
+            'address_district' => $validated['address_district'],
+            'address_line' => $validated['address_line'],
+        ];
 
         $profile = $studentService->profileForDni((string) $draft['student']['dni']);
         if (is_array($profile)) {

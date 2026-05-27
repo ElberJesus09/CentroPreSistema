@@ -114,6 +114,62 @@ async function lookupStudentProfile(input) {
     }
 }
 
+function fillSelect(select, values, selectedValue) {
+    select.innerHTML = '<option value="">Seleccione</option>';
+
+    values.forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        option.selected = value === selectedValue;
+        select.appendChild(option);
+    });
+}
+
+function initPeruAddressSelects() {
+    document.querySelectorAll('[data-peru-address]').forEach((root) => {
+        const department = root.querySelector('[data-address-department]');
+        const province = root.querySelector('[data-address-province]');
+        const district = root.querySelector('[data-address-district]');
+
+        if (!department || !province || !district) {
+            return;
+        }
+
+        let locations = {};
+        try {
+            locations = JSON.parse(root.dataset.locations || '{}');
+        } catch {
+            locations = {};
+        }
+
+        const populateDistricts = () => {
+            const provinceMap = locations[department.value] || {};
+            const districts = provinceMap[province.value] || [];
+            fillSelect(district, districts, district.dataset.selected || '');
+        };
+
+        const populateProvinces = () => {
+            const provinceMap = locations[department.value] || {};
+            fillSelect(province, Object.keys(provinceMap), province.dataset.selected || '');
+            populateDistricts();
+        };
+
+        department.addEventListener('change', () => {
+            province.dataset.selected = '';
+            district.dataset.selected = '';
+            populateProvinces();
+        });
+
+        province.addEventListener('change', () => {
+            district.dataset.selected = '';
+            populateDistricts();
+        });
+
+        populateProvinces();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const dniInput = document.querySelector('[name="student[dni]"]');
     if (!dniInput) {
@@ -124,6 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
     dniInput.setAttribute('maxlength', '8');
     dniInput.addEventListener('input', debounce(() => lookupStudentProfile(dniInput)));
 });
+
+document.addEventListener('DOMContentLoaded', initPeruAddressSelects);
 
 document.addEventListener('DOMContentLoaded', () => {
     const dialog = document.getElementById('app-confirm-dialog');

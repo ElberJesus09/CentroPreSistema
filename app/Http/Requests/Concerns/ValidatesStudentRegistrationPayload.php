@@ -73,10 +73,27 @@ trait ValidatesStudentRegistrationPayload
     {
         return [
             'student.birth_date.before_or_equal' => 'Fecha de nacimiento incorrecta. El estudiante debe tener al menos 15 años.',
+            'student.dni.required' => 'Ingrese el DNI del estudiante.',
+            'student.dni.digits' => 'El DNI del estudiante debe contener exactamente 8 dígitos.',
+            'student.phone.required' => 'Ingrese el celular del estudiante.',
+            'student.phone.digits' => 'El celular del estudiante debe contener exactamente 9 dígitos.',
             'student.dni.unique' => 'Este DNI ya tiene una inscripción registrada en el ciclo seleccionado.',
+            'student.payment_voucher_number.required' => 'Ingrese el número de voucher.',
             'student.payment_voucher_number.unique' => 'Este número de voucher ya fue registrado.',
+            'student.payment_voucher_number.max' => 'El número de voucher no debe superar 40 caracteres.',
             'student.payment_voucher_number.regex' => 'El número de voucher solo debe contener dígitos.',
+            'student.payment_agency_number.required' => 'Ingrese el número de agencia.',
+            'student.payment_agency_number.digits' => 'El número de agencia debe contener exactamente 4 dígitos.',
             'student.payment_date.before_or_equal' => 'La fecha de pago no puede ser posterior a hoy.',
+            'guardian.dni.required' => 'Ingrese el DNI del apoderado.',
+            'guardian.dni.digits' => 'El DNI del apoderado debe contener exactamente 8 dígitos.',
+            'guardian.phone.required' => 'Ingrese el celular del apoderado.',
+            'guardian.phone.digits' => 'El celular del apoderado debe contener exactamente 9 dígitos.',
+            'school.graduation_year.required' => 'Ingrese el año de egreso.',
+            'school.graduation_year.integer' => 'El año de egreso debe ser un número entero.',
+            'school.graduation_year.digits' => 'El año de egreso debe contener exactamente 4 dígitos.',
+            'school.graduation_year.min' => 'El año de egreso no puede ser menor a 1990.',
+            'school.graduation_year.max' => 'El año de egreso no puede ser mayor a 2100.',
         ];
     }
 

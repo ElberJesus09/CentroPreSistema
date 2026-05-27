@@ -15,12 +15,15 @@ class PublicResultController extends Controller
         $setting = ExamSetting::singleton();
         abort_unless($setting->public_results_enabled, 404);
 
-        $dni = mb_substr(trim((string) $request->query('dni', '')), 0, 8);
+        $dni = trim((string) $request->query('dni', ''));
         $result = null;
 
-        if ($dni !== '') {
+        if ($request->has('dni')) {
             $request->validate([
                 'dni' => ['required', 'digits:8'],
+            ], [
+                'dni.required' => 'Ingrese su DNI para consultar sus resultados.',
+                'dni.digits' => 'El DNI debe contener exactamente 8 dígitos.',
             ]);
 
             $result = $service->publicResultForDni($dni);
@@ -29,7 +32,7 @@ class PublicResultController extends Controller
         return view('public.results.show', [
             'dni' => $dni,
             'result' => $result,
-            'searched' => $dni !== '',
+            'searched' => $request->has('dni') && $dni !== '',
         ]);
     }
 }

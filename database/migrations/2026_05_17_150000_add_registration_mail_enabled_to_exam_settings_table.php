@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('exam_settings', function (Blueprint $table): void {
-            $table->boolean('registration_mail_enabled')->default(true)->after('institutional_message');
+            $table->boolean('registration_mail_enabled')->default(false)->after('institutional_message');
         });
     }
 

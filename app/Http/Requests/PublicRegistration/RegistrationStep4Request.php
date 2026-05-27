@@ -80,8 +80,12 @@ class RegistrationStep4Request extends FormRequest
     public function messages(): array
     {
         return [
+            'student.payment_voucher_number.required' => 'Ingrese el número de voucher.',
             'student.payment_voucher_number.unique' => 'Este número de voucher ya fue registrado.',
+            'student.payment_voucher_number.max' => 'El número de voucher no debe superar 40 caracteres.',
             'student.payment_voucher_number.regex' => 'El número de voucher solo debe contener dígitos.',
+            'student.payment_agency_number.required' => 'Ingrese el número de agencia.',
+            'student.payment_agency_number.digits' => 'El número de agencia debe contener exactamente 4 dígitos.',
             'student.payment_date.before_or_equal' => 'La fecha de pago no puede ser posterior a hoy.',
         ];
     }

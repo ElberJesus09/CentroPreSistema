@@ -25,4 +25,18 @@ class RegistrationStep3Request extends FormRequest
             'botcheck' => ['prohibited'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'school.graduation_year.required' => 'Ingrese el año de egreso.',
+            'school.graduation_year.integer' => 'El año de egreso debe ser un número entero.',
+            'school.graduation_year.digits' => 'El año de egreso debe contener exactamente 4 dígitos.',
+            'school.graduation_year.min' => 'El año de egreso no puede ser menor a 1990.',
+            'school.graduation_year.max' => 'El año de egreso no puede ser mayor a 2100.',
+        ];
+    }
 }

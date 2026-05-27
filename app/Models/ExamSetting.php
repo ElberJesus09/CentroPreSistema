@@ -27,7 +27,7 @@ class ExamSetting extends Model
                 'exam_time' => null,
                 'exam_location' => null,
                 'institutional_message' => null,
-                'registration_mail_enabled' => true,
+                'registration_mail_enabled' => false,
                 'public_results_enabled' => false,
             ],
         );

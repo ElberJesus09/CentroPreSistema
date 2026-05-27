@@ -34,6 +34,14 @@
             class="rounded-xl border border-outline-variant/50 bg-surface-container-lowest p-6 shadow-xl shadow-primary/5 sm:p-8 md:p-10"
         >
             @if ($step === 1)
+                @php
+                    $locations = config('peru_locations', []);
+                    $addressDraft = data_get($draft, 'student_address', []);
+                    $selectedDepartment = old('address_department', data_get($addressDraft, 'address_department', ''));
+                    $selectedProvince = old('address_province', data_get($addressDraft, 'address_province', ''));
+                    $selectedDistrict = old('address_district', data_get($addressDraft, 'address_district', ''));
+                    $addressLine = old('address_line', data_get($addressDraft, 'address_line', ''));
+                @endphp
                 <form method="post" action="{{ route('registration.step1.store') }}" class="relative space-y-8">
                     @csrf
                     <x-registration.honeypot />
@@ -66,14 +74,73 @@
                         </div>
                         <x-input label="Celular (9 dígitos)" name="student[phone]" :value="old('student.phone', data_get($draft, 'student.phone'))" />
                         <x-input label="Correo electrónico" name="student[email]" type="email" :value="old('student.email', data_get($draft, 'student.email'))" />
-                        <div class="space-y-1 sm:col-span-2">
-                            <x-textarea
-                                label="Dirección de domicilio"
-                                name="student[address]"
-                                error-key="student.address"
-                                rows="2"
-                                :value="old('student.address', data_get($draft, 'student.address'))"
+                    </div>
+                    <div
+                        class="grid gap-5 border-t border-outline-variant/50 pt-6 sm:grid-cols-3"
+                        data-peru-address
+                        data-locations='@json($locations)'
+                    >
+                        <div class="space-y-1">
+                            <label for="address_department" class="block text-sm font-semibold text-on-surface-variant">Departamento</label>
+                            <select
+                                id="address_department"
+                                name="address_department"
+                                data-address-department
+                                data-selected="{{ $selectedDepartment }}"
+                                class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2.5 text-sm text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            >
+                                <option value="">Seleccione</option>
+                                @foreach ($locations as $department => $provinces)
+                                    <option value="{{ $department }}" @selected($selectedDepartment === $department)>{{ $department }}</option>
+                                @endforeach
+                            </select>
+                            @error('address_department')
+                                <p class="text-sm text-error">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="space-y-1">
+                            <label for="address_province" class="block text-sm font-semibold text-on-surface-variant">Provincia</label>
+                            <select
+                                id="address_province"
+                                name="address_province"
+                                data-address-province
+                                data-selected="{{ $selectedProvince }}"
+                                class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2.5 text-sm text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            >
+                                <option value="">Seleccione</option>
+                            </select>
+                            @error('address_province')
+                                <p class="text-sm text-error">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="space-y-1">
+                            <label for="address_district" class="block text-sm font-semibold text-on-surface-variant">Distrito</label>
+                            <select
+                                id="address_district"
+                                name="address_district"
+                                data-address-district
+                                data-selected="{{ $selectedDistrict }}"
+                                class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2.5 text-sm text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            >
+                                <option value="">Seleccione</option>
+                            </select>
+                            @error('address_district')
+                                <p class="text-sm text-error">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="space-y-1 sm:col-span-3">
+                            <label for="address_line" class="block text-sm font-semibold text-on-surface-variant">Calle, jirón, avenida o referencia</label>
+                            <input
+                                id="address_line"
+                                name="address_line"
+                                type="text"
+                                value="{{ $addressLine }}"
+                                placeholder="Ej. Av. Principal 123"
+                                class="block w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 py-3 text-sm text-on-surface shadow-sm placeholder:text-outline/50 transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                             />
+                            @error('address_line')
+                                <p class="text-sm text-error">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
                     <div class="flex flex-wrap justify-end gap-3 border-t border-outline-variant/50 pt-6">
