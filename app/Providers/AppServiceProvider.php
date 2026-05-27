@@ -32,6 +32,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->app->setLocale('es');
+        $this->app['translator']->setFallback('es');
+
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }

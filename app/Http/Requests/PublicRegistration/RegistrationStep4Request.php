@@ -80,12 +80,18 @@ class RegistrationStep4Request extends FormRequest
     public function messages(): array
     {
         return [
+            'career_id.required' => 'Seleccione la carrera postulante.',
+            'career_id.exists' => 'Seleccione una carrera válida.',
+            'academic_cycle_shift_id.required' => 'Seleccione el ciclo, sede y turno.',
+            'academic_cycle_shift_id.exists' => 'Seleccione un ciclo, sede y turno disponible.',
             'student.payment_voucher_number.required' => 'Ingrese el número de voucher.',
             'student.payment_voucher_number.unique' => 'Este número de voucher ya fue registrado.',
             'student.payment_voucher_number.max' => 'El número de voucher no debe superar 40 caracteres.',
             'student.payment_voucher_number.regex' => 'El número de voucher solo debe contener dígitos.',
             'student.payment_agency_number.required' => 'Ingrese el número de agencia.',
             'student.payment_agency_number.digits' => 'El número de agencia debe contener exactamente 4 dígitos.',
+            'student.payment_date.required' => 'Ingrese la fecha de pago.',
+            'student.payment_date.date' => 'Ingrese una fecha de pago válida.',
             'student.payment_date.before_or_equal' => 'La fecha de pago no puede ser posterior a hoy.',
         ];
     }

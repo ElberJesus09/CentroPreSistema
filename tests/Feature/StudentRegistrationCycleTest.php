@@ -369,6 +369,84 @@ test('public registration builds student address from peru location fields', fun
         ->assertSessionHas('public_registration.student_address.address_line', 'Av. Principal 123');
 });
 
+test('public registration returns spanish messages for empty student required fields', function () {
+    $step1 = new RegistrationStep1Request();
+    $payload = publicStep1Payload('');
+    $payload['student']['first_name'] = '';
+    $payload['student']['last_name'] = '';
+    $payload['student']['mother_last_name'] = '';
+    $payload['student']['birth_date'] = '';
+    $payload['student']['email'] = '';
+
+    $validator = Validator::make($payload, $step1->rules(), $step1->messages());
+
+    expect($validator->fails())->toBeTrue()
+        ->and($validator->errors()->first('student.first_name'))->toBe('Ingrese los nombres del estudiante.')
+        ->and($validator->errors()->first('student.last_name'))->toBe('Ingrese el apellido paterno del estudiante.')
+        ->and($validator->errors()->first('student.mother_last_name'))->toBe('Ingrese el apellido materno del estudiante.')
+        ->and($validator->errors()->first('student.birth_date'))->toBe('Ingrese la fecha de nacimiento del estudiante.')
+        ->and($validator->errors()->first('student.email'))->toBe('Ingrese el correo electrónico del estudiante.');
+});
+
+test('public registration required messages do not fall back to english', function () {
+    $requests = [
+        new RegistrationStep1Request(),
+        new RegistrationStep2Request(),
+        new RegistrationStep3Request(),
+        new RegistrationStep4Request(),
+    ];
+
+    $messages = collect($requests)
+        ->flatMap(function ($request) {
+            $validator = Validator::make([], $request->rules(), $request->messages());
+
+            expect($validator->fails())->toBeTrue();
+
+            return $validator->errors()->all();
+        })
+        ->values();
+
+    $messages->each(function (string $message): void {
+        expect($message)->not->toContain(' field is required')
+            ->and($message)->not->toContain('The ')
+            ->and($message)->not->toContain('student.')
+            ->and($message)->not->toContain('guardian.')
+            ->and($message)->not->toContain('school.');
+    });
+});
+
+test('student registration stores names and address in uppercase preserving accents', function () {
+    $career = Career::query()->create([
+        'name' => 'Traduccion Test',
+        'code' => 'TT',
+        'status' => true,
+    ]);
+    [, $schedule] = makeScheduleForCycle('2032-I', '2032-01-01');
+
+    $payload = registrationPayload($schedule->id, $career->id, '55667788');
+    $payload['student']['first_name'] = 'josé maría';
+    $payload['student']['last_name'] = 'muñoz';
+    $payload['student']['mother_last_name'] = 'cañete';
+    $payload['student']['address'] = 'av. los héroes 123, san josé';
+    $payload['guardian']['first_name'] = 'maría josé';
+    $payload['guardian']['last_name'] = 'peña';
+    $payload['guardian']['mother_last_name'] = 'ñique';
+    $payload['school']['name'] = 'colegio señor de sipán';
+    $payload['school']['district'] = 'josé leonardo ortiz';
+
+    $student = app(StudentService::class)->registerStudent($payload);
+
+    expect($student->first_name)->toBe('JOSÉ MARÍA')
+        ->and($student->last_name)->toBe('MUÑOZ')
+        ->and($student->mother_last_name)->toBe('CAÑETE')
+        ->and($student->address)->toBe('AV. LOS HÉROES 123, SAN JOSÉ')
+        ->and($student->guardian->first_name)->toBe('MARÍA JOSÉ')
+        ->and($student->guardian->last_name)->toBe('PEÑA')
+        ->and($student->guardian->mother_last_name)->toBe('ÑIQUE')
+        ->and($student->school->name)->toBe('COLEGIO SEÑOR DE SIPÁN')
+        ->and($student->school->district)->toBe('JOSÉ LEONARDO ORTIZ');
+});
+
 test('public results returns spanish message for incomplete or long dni', function () {
     ExamSetting::singleton()->update(['public_results_enabled' => true]);
 

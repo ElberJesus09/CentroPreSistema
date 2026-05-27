@@ -551,7 +551,11 @@ class StudentService
                     $section === 'school' && $key === 'name' => 255,
                     default => 500,
                 };
-                $validated[$section][$key] = $this->sanitizePlainString($value, $max);
+                $validated[$section][$key] = $this->sanitizePlainString(
+                    $value,
+                    $max,
+                    $this->shouldStoreUppercase($section, $key),
+                );
             }
         }
 
@@ -562,9 +566,25 @@ class StudentService
         return $validated;
     }
 
-    private function sanitizePlainString(string $value, int $max): string
+    private function sanitizePlainString(string $value, int $max, bool $uppercase = false): string
     {
-        return mb_substr(trim(strip_tags($value)), 0, $max);
+        $value = trim(strip_tags($value));
+
+        if ($uppercase) {
+            $value = mb_strtoupper($value, 'UTF-8');
+        }
+
+        return mb_substr($value, 0, $max);
+    }
+
+    private function shouldStoreUppercase(string $section, string $key): bool
+    {
+        return match ($section) {
+            'student' => in_array($key, ['first_name', 'last_name', 'mother_last_name', 'address'], true),
+            'guardian' => in_array($key, ['first_name', 'last_name', 'mother_last_name'], true),
+            'school' => in_array($key, ['name', 'department', 'province', 'district'], true),
+            default => false,
+        };
     }
 
     /** Invalida cache de turnos publicos tras cambios de cupos. */

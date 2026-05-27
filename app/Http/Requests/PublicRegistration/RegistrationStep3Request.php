@@ -32,6 +32,10 @@ class RegistrationStep3Request extends FormRequest
     public function messages(): array
     {
         return [
+            'school.name.required' => 'Ingrese el nombre del colegio.',
+            'school.department.required' => 'Ingrese el departamento del colegio.',
+            'school.province.required' => 'Ingrese la provincia del colegio.',
+            'school.district.required' => 'Ingrese el distrito del colegio.',
             'school.graduation_year.required' => 'Ingrese el año de egreso.',
             'school.graduation_year.integer' => 'El año de egreso debe ser un número entero.',
             'school.graduation_year.digits' => 'El año de egreso debe contener exactamente 4 dígitos.',
