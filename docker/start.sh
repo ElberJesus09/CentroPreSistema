@@ -5,6 +5,14 @@ if [ -n "${DATABASE_URL:-}" ] && [ -z "${DB_URL:-}" ]; then
     export DB_URL="$DATABASE_URL"
 fi
 
+if [ -z "${DB_CONNECTION:-}" ] && [ -n "${DB_URL:-}" ]; then
+    case "$DB_URL" in
+        mysql://*|mysql2://*|mariadb://*)
+            export DB_CONNECTION=mysql
+            ;;
+    esac
+fi
+
 envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf
 
 php artisan config:cache

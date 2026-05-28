@@ -22,8 +22,8 @@ return new class extends Migration
                 $table->timestamps();
                 $table->softDeletes();
 
-                $table->unique(['academic_cycle_id', 'code']);
-                $table->index(['academic_cycle_id', 'status', 'academic_priority']);
+                $table->unique(['academic_cycle_id', 'code'], 'classrooms_cycle_code_unique');
+                $table->index(['academic_cycle_id', 'status', 'academic_priority'], 'classrooms_cycle_status_priority_index');
             });
         }
 
@@ -39,9 +39,9 @@ return new class extends Migration
                 $table->timestamp('assigned_at')->nullable();
                 $table->timestamps();
 
-                $table->unique(['student_id', 'academic_cycle_id']);
-                $table->index(['academic_cycle_id', 'classroom_id']);
-                $table->index(['academic_cycle_id', 'placement_score']);
+                $table->unique(['student_id', 'academic_cycle_id'], 'sca_student_cycle_unique');
+                $table->index(['academic_cycle_id', 'classroom_id'], 'sca_cycle_classroom_index');
+                $table->index(['academic_cycle_id', 'placement_score'], 'sca_cycle_score_index');
             });
         }
 
@@ -56,7 +56,7 @@ return new class extends Migration
                 $table->string('reason', 500)->nullable();
                 $table->timestamps();
 
-                $table->index(['academic_cycle_id', 'student_id', 'created_at']);
+                $table->index(['academic_cycle_id', 'student_id', 'created_at'], 'cm_cycle_student_created_index');
             });
         }
 
@@ -74,8 +74,8 @@ return new class extends Migration
                 $table->timestamps();
                 $table->softDeletes();
 
-                $table->unique(['academic_cycle_id', 'name']);
-                $table->index(['academic_cycle_id', 'type', 'status']);
+                $table->unique(['academic_cycle_id', 'name'], 'evaluations_cycle_name_unique');
+                $table->index(['academic_cycle_id', 'type', 'status'], 'evaluations_cycle_type_status_index');
             });
         }
 

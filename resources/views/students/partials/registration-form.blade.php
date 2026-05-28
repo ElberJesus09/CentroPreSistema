@@ -4,6 +4,10 @@
 --}}
 @php
     $method = strtolower($method ?? 'post');
+    $locations = config('peru_locations', []);
+    $selectedSchoolDepartment = old('school.department', $student?->school?->department ?? '');
+    $selectedSchoolProvince = old('school.province', $student?->school?->province ?? '');
+    $selectedSchoolDistrict = old('school.district', $student?->school?->district ?? '');
 @endphp
 <form method="post" action="{{ $action }}" class="space-y-10 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-sm lg:p-8">
     @csrf
@@ -83,11 +87,60 @@
         <h2 class="mb-4 border-b border-outline-variant/50 pb-2 text-sm font-bold uppercase tracking-wide text-on-surface-variant">
             Colegio de procedencia
         </h2>
-        <div class="grid gap-4 sm:grid-cols-2">
+        <div
+            class="grid gap-4 sm:grid-cols-2"
+            data-peru-address
+            data-locations='@json($locations)'
+        >
             <x-input label="Nombre del colegio" name="school[name]" :value="old('school.name', $student?->school?->name ?? '')" />
-            <x-input label="Departamento" name="school[department]" :value="old('school.department', $student?->school?->department ?? '')" />
-            <x-input label="Provincia" name="school[province]" :value="old('school.province', $student?->school?->province ?? '')" />
-            <x-input label="Distrito" name="school[district]" :value="old('school.district', $student?->school?->district ?? '')" />
+            <div class="space-y-1">
+                <label for="school_department" class="block text-sm font-semibold text-on-surface-variant">Departamento</label>
+                <select
+                    id="school_department"
+                    name="school[department]"
+                    data-address-department
+                    data-selected="{{ $selectedSchoolDepartment }}"
+                    class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2.5 text-sm text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                    <option value="">Seleccione</option>
+                    @foreach ($locations as $department => $provinces)
+                        <option value="{{ $department }}" @selected($selectedSchoolDepartment === $department)>{{ $department }}</option>
+                    @endforeach
+                </select>
+                @error('school.department')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+            <div class="space-y-1">
+                <label for="school_province" class="block text-sm font-semibold text-on-surface-variant">Provincia</label>
+                <select
+                    id="school_province"
+                    name="school[province]"
+                    data-address-province
+                    data-selected="{{ $selectedSchoolProvince }}"
+                    class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2.5 text-sm text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                    <option value="">Seleccione</option>
+                </select>
+                @error('school.province')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+            <div class="space-y-1">
+                <label for="school_district" class="block text-sm font-semibold text-on-surface-variant">Distrito</label>
+                <select
+                    id="school_district"
+                    name="school[district]"
+                    data-address-district
+                    data-selected="{{ $selectedSchoolDistrict }}"
+                    class="block w-full rounded-lg border border-outline-variant bg-white px-3 py-2.5 text-sm text-on-surface shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                    <option value="">Seleccione</option>
+                </select>
+                @error('school.district')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
             <x-input label="Año de egreso" name="school[graduation_year]" type="number" :value="old('school.graduation_year', $student?->school?->graduation_year ?? '')" />
         </div>
     </section>

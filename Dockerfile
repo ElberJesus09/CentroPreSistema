@@ -31,7 +31,6 @@ RUN apt-get update \
         libicu-dev \
         libjpeg62-turbo-dev \
         libpng-dev \
-        libpq-dev \
         libzip-dev \
         nginx \
         unzip \
@@ -41,8 +40,7 @@ RUN apt-get update \
         gd \
         intl \
         opcache \
-        pdo_pgsql \
-        pgsql \
+        pdo_mysql \
         zip \
     && rm -rf /var/lib/apt/lists/*
 
@@ -57,6 +55,7 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 ENV APP_ENV=production
 ENV APP_DEBUG=false
 ENV LOG_CHANNEL=stderr
+ENV DB_CONNECTION=mysql
 ENV PORT=10000
 
 EXPOSE 10000
