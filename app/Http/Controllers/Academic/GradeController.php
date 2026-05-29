@@ -82,6 +82,8 @@ class GradeController extends Controller
 
     public function confirmImport(Request $request, GradeService $service): RedirectResponse
     {
+        $this->authorizeAcademicImport($request);
+
         $data = session('academic_grades_import');
         if (! is_array($data) || ! Storage::exists((string) ($data['path'] ?? ''))) {
             return back()->with('warning', 'La vista previa venció. Vuelve a cargar el archivo.');
@@ -122,5 +124,15 @@ class GradeController extends Controller
         }
 
         return mb_substr(trim($value), 0, 40);
+    }
+
+    private function authorizeAcademicImport(Request $request): void
+    {
+        $user = $request->user();
+
+        abort_unless(
+            $user !== null && ($user->can('academic.imports.manage') || $user->isSuperAdmin() || $user->isAdmin()),
+            403,
+        );
     }
 }

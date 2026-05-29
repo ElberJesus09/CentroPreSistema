@@ -154,12 +154,25 @@
                 <form method="post" action="{{ route('registration.step2.store') }}" class="relative space-y-8">
                     @csrf
                     <x-registration.honeypot />
-                    <div class="flex items-center gap-3 border-b border-outline-variant/50 pb-4">
-                        <div class="rounded-lg bg-primary-fixed p-2">
-                            <span class="material-symbols-outlined text-primary">supervisor_account</span>
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/50 pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="rounded-lg bg-primary-fixed p-2">
+                                <span class="material-symbols-outlined text-primary">supervisor_account</span>
+                            </div>
+                            <h2 class="font-display text-xl font-semibold text-primary">Datos del apoderado</h2>
                         </div>
-                        <h2 class="font-display text-xl font-semibold text-primary">Datos del apoderado</h2>
+                        @unless ($guardianRequired)
+                            <x-button type="submit" name="skip_guardian" value="1" variant="secondary" class="gap-2 rounded-lg px-5">
+                                Saltar
+                                <span class="material-symbols-outlined text-lg">skip_next</span>
+                            </x-button>
+                        @endunless
                     </div>
+                    @unless ($guardianRequired)
+                        <div class="rounded-lg border border-secondary-container/50 bg-secondary-container/20 px-4 py-3 text-sm text-on-secondary-container">
+                            Es mayor de edad. Puede registrar apoderado si desea; si no, puede continuar.
+                        </div>
+                    @endunless
                     <div class="grid gap-5 sm:grid-cols-2">
                         <x-input label="Nombres" name="guardian[first_name]" :value="old('guardian.first_name', data_get($draft, 'guardian.first_name'))" />
                         <x-input label="Apellido paterno" name="guardian[last_name]" :value="old('guardian.last_name', data_get($draft, 'guardian.last_name'))" />
@@ -393,9 +406,13 @@
                         <div class="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4">
                             <dt class="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Apoderado</dt>
                             <dd class="mt-2 text-on-surface">
-                                {{ data_get($draft, 'guardian.first_name') }} {{ data_get($draft, 'guardian.last_name') }}
-                                <br />
-                                <span class="text-on-surface-variant">{{ data_get($draft, 'guardian.phone') }}</span>
+                                @if (data_get($draft, 'guardian.first_name'))
+                                    {{ data_get($draft, 'guardian.first_name') }} {{ data_get($draft, 'guardian.last_name') }}
+                                    <br />
+                                    <span class="text-on-surface-variant">{{ data_get($draft, 'guardian.phone') }}</span>
+                                @else
+                                    <span class="text-on-surface-variant">No registrado por mayoria de edad</span>
+                                @endif
                             </dd>
                         </div>
                         <div class="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4 sm:col-span-2">

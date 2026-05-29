@@ -2,14 +2,34 @@
 
 namespace App\Http\Requests\PublicRegistration;
 
+use App\Http\Requests\Concerns\ValidatesStudentRegistrationPayload;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class RegistrationStep2Request extends FormRequest
 {
+    use ValidatesStudentRegistrationPayload;
+
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $draft = $this->session()->get('public_registration', []);
+        $birthDate = $draft['student']['birth_date'] ?? null;
+
+        $this->merge([
+            'student' => [
+                'birth_date' => $birthDate,
+            ],
+        ]);
+
+        if ($this->boolean('skip_guardian')) {
+            $this->merge([
+                'guardian' => [],
+            ]);
+        }
     }
 
     /**
@@ -18,12 +38,8 @@ class RegistrationStep2Request extends FormRequest
     public function rules(): array
     {
         return [
-            'guardian.first_name' => ['required', 'string', 'max:120'],
-            'guardian.last_name' => ['required', 'string', 'max:120'],
-            'guardian.mother_last_name' => ['required', 'string', 'max:120'],
-            'guardian.dni' => ['required', 'digits:8'],
-            'guardian.phone' => ['required', 'digits:9'],
-            'guardian.relationship' => ['required', 'string', Rule::in(['father', 'mother', 'uncle', 'aunt', 'guardian'])],
+            ...$this->guardianRules(),
+            'skip_guardian' => ['nullable', 'boolean'],
             'botcheck' => ['prohibited'],
         ];
     }

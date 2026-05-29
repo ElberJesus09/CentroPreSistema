@@ -13,6 +13,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -321,7 +322,9 @@ class StudentService
                 $this->assertScheduleAcceptsEnrollment($schedule);
                 $this->assertStudentIsNotRegisteredInCycle((string) $validated['student']['dni'], (int) $schedule->academic_cycle_id);
 
-                $guardian = Guardian::query()->create($validated['guardian']);
+                $guardian = $this->guardianPayloadHasRequiredData($validated)
+                    ? Guardian::query()->create($validated['guardian'])
+                    : null;
                 $school = School::query()->create($validated['school']);
 
                 $status = $validated['status'] ?? Student::STATUS_PENDING;
@@ -331,7 +334,7 @@ class StudentService
                     'career_id' => (int) $validated['career_id'],
                     'academic_cycle_id' => (int) $schedule->academic_cycle_id,
                     'academic_cycle_shift_id' => $scheduleId,
-                    'guardian_id' => $guardian->id,
+                    'guardian_id' => $guardian?->id,
                     'school_id' => $school->id,
                     'registration_date' => now()->toDateString(),
                     'status' => $status,
@@ -393,7 +396,17 @@ class StudentService
                     );
                 }
 
-                $student->guardian?->update($validated['guardian']);
+                $guardianIdToDelete = null;
+                if ($this->guardianPayloadHasRequiredData($validated)) {
+                    if ($student->guardian === null) {
+                        $student->guardian()->associate(Guardian::query()->create($validated['guardian']));
+                    } else {
+                        $student->guardian->update($validated['guardian']);
+                    }
+                } else {
+                    $guardianIdToDelete = $student->guardian_id;
+                    $student->guardian()->dissociate();
+                }
                 $student->school?->update($validated['school']);
 
                 $student->fill([
@@ -404,6 +417,10 @@ class StudentService
                     'status' => $validated['status'],
                 ]);
                 $student->save();
+
+                if ($guardianIdToDelete !== null && ! Student::query()->where('guardian_id', $guardianIdToDelete)->exists()) {
+                    Guardian::query()->whereKey($guardianIdToDelete)->delete();
+                }
 
                 return $student->fresh()->load(['guardian', 'school', 'career', 'academicCycle', 'schedule.academicCycle', 'schedule.campus', 'schedule.shift']);
             });
@@ -564,6 +581,50 @@ class StudentService
         }
 
         return $validated;
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function guardianPayloadHasRequiredData(array $validated): bool
+    {
+        $birthDate = data_get($validated, 'student.birth_date');
+
+        if (is_string($birthDate)) {
+            try {
+                if (Carbon::parse($birthDate)->age >= 18) {
+                    return $this->guardianPayloadHasAnyValue($validated);
+                }
+            } catch (\Throwable) {
+                return true;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function guardianPayloadHasAnyValue(array $validated): bool
+    {
+        $guardian = $validated['guardian'] ?? null;
+
+        if (! is_array($guardian)) {
+            return false;
+        }
+
+        foreach ($guardian as $value) {
+            if (is_string($value) && trim($value) !== '') {
+                return true;
+            }
+
+            if (! is_string($value) && $value !== null && $value !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function sanitizePlainString(string $value, int $max, bool $uppercase = false): string

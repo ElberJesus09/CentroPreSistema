@@ -4,11 +4,14 @@ namespace App\Http\Requests\Concerns;
 
 use App\Models\AcademicCycleShift;
 use App\Models\Student;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 trait ValidatesStudentRegistrationPayload
 {
     private const int MINIMUM_STUDENT_AGE = 15;
+
+    private const int GUARDIAN_REQUIRED_UNTIL_AGE = 18;
 
     /**
      * @return array<string, mixed>
@@ -39,12 +42,7 @@ trait ValidatesStudentRegistrationPayload
             'student.payment_agency_number' => ['required', 'digits:4'],
             'student.payment_date' => ['required', 'date', 'before_or_equal:today'],
 
-            'guardian.first_name' => ['required', 'string', 'max:120'],
-            'guardian.last_name' => ['required', 'string', 'max:120'],
-            'guardian.mother_last_name' => ['required', 'string', 'max:120'],
-            'guardian.dni' => ['required', 'digits:8'],
-            'guardian.phone' => ['required', 'digits:9'],
-            'guardian.relationship' => ['required', 'string', Rule::in(['father', 'mother', 'uncle', 'aunt', 'guardian'])],
+            ...$this->guardianRules(),
 
             'school.name' => ['required', 'string', 'max:255'],
             'school.department' => ['required', 'string', 'max:120'],
@@ -64,6 +62,60 @@ trait ValidatesStudentRegistrationPayload
             'date',
             'before_or_equal:'.now()->subYears(self::MINIMUM_STUDENT_AGE)->toDateString(),
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function guardianRules(): array
+    {
+        $required = $this->guardianIsRequired() || $this->guardianPayloadHasAnyValue();
+        $presence = $required ? 'required' : 'nullable';
+
+        return [
+            'guardian.first_name' => [$presence, 'string', 'max:120'],
+            'guardian.last_name' => [$presence, 'string', 'max:120'],
+            'guardian.mother_last_name' => [$presence, 'string', 'max:120'],
+            'guardian.dni' => [$presence, 'digits:8'],
+            'guardian.phone' => [$presence, 'digits:9'],
+            'guardian.relationship' => [$presence, 'string', Rule::in(['father', 'mother', 'uncle', 'aunt', 'guardian'])],
+        ];
+    }
+
+    protected function guardianIsRequired(): bool
+    {
+        $birthDate = $this->input('student.birth_date');
+
+        if (! is_string($birthDate) || trim($birthDate) === '') {
+            return true;
+        }
+
+        try {
+            return Carbon::parse($birthDate)->age < self::GUARDIAN_REQUIRED_UNTIL_AGE;
+        } catch (\Throwable) {
+            return true;
+        }
+    }
+
+    protected function guardianPayloadHasAnyValue(): bool
+    {
+        $guardian = $this->input('guardian');
+
+        if (! is_array($guardian)) {
+            return false;
+        }
+
+        foreach ($guardian as $value) {
+            if (is_string($value) && trim($value) !== '') {
+                return true;
+            }
+
+            if (! is_string($value) && $value !== null && $value !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

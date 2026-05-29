@@ -62,17 +62,19 @@
         </ul>
     </div>
 
-    <h2>Obligaciones del apoderado</h2>
-    <div class="box">
-        <ul>
-            <li>Supervisar el cumplimiento del reglamento y brindar apoyo al proceso educativo del postulante.</li>
-            <li>Mantener actualizados los datos de contacto ante la institucion.</li>
-            <li>Asumir la responsabilidad derivada de la informacion declarada en la ficha de inscripcion.</li>
-        </ul>
-    </div>
+    @if ($student->guardian)
+        <h2>Obligaciones del apoderado</h2>
+        <div class="box">
+            <ul>
+                <li>Supervisar el cumplimiento del reglamento y brindar apoyo al proceso educativo del postulante.</li>
+                <li>Mantener actualizados los datos de contacto ante la institucion.</li>
+                <li>Asumir la responsabilidad derivada de la informacion declarada en la ficha de inscripcion.</li>
+            </ul>
+        </div>
+    @endif
 
     <p class="closing">
-        Con la firma del presente documento, postulante y apoderado manifiestan haber leido y aceptado el reglamento institucional
+        Con la firma del presente documento, {{ $student->guardian ? 'postulante y apoderado manifiestan' : 'el postulante manifiesta' }} haber leido y aceptado el reglamento institucional
         y las normas del proceso de admision.
     </p>
 
@@ -81,9 +83,11 @@
             <td>
                 <div class="line">Firma del postulante</div>
             </td>
-            <td>
-                <div class="line">Firma del apoderado</div>
-            </td>
+            @if ($student->guardian)
+                <td>
+                    <div class="line">Firma del apoderado</div>
+                </td>
+            @endif
         </tr>
     </table>
 </body>

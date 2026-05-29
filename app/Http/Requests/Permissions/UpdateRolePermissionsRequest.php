@@ -12,8 +12,13 @@ class UpdateRolePermissionsRequest extends FormRequest
     public function authorize(): bool
     {
         $user = $this->user();
+        $role = $this->route('role');
 
-        return $user?->can('roles.update') || $user?->isSuperAdmin();
+        if (! ($user?->can('roles.update') || $user?->isSuperAdmin())) {
+            return false;
+        }
+
+        return ! ($role instanceof Role && $role->name === Role::NAME_SUPER_ADMIN && ! $user->isSuperAdmin());
     }
 
     /**

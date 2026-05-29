@@ -10,6 +10,7 @@ use App\Models\AcademicCycleShift;
 use App\Models\Campus;
 use App\Models\Career;
 use App\Models\ExamSetting;
+use App\Models\Guardian;
 use App\Models\Shift;
 use App\Services\PublicRegistrationCompletionService;
 use App\Services\StudentService;
@@ -172,6 +173,31 @@ test('student dni can register in different academic cycles', function () {
         ->and($first->academic_cycle_id)->not->toBe($second->academic_cycle_id);
 });
 
+test('adult students can register without guardian', function () {
+    Carbon::setTestNow('2026-05-26');
+
+    try {
+        $career = Career::query()->create([
+            'name' => 'Contabilidad Test',
+            'code' => 'CT',
+            'status' => true,
+        ]);
+        [, $schedule] = makeScheduleForCycle('2033-I', '2033-01-01');
+
+        $payload = registrationPayload($schedule->id, $career->id, '10101010');
+        $payload['student']['birth_date'] = '2008-05-26';
+        $payload['guardian'] = [];
+
+        $student = app(StudentService::class)->registerStudent($payload);
+
+        expect($student->guardian_id)->toBeNull()
+            ->and($student->guardian)->toBeNull()
+            ->and(Guardian::query()->count())->toBe(0);
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
 test('student dni cannot register twice in the same academic cycle with different shifts', function () {
     $career = Career::query()->create([
         'name' => 'Enfermeria Test',
@@ -192,7 +218,7 @@ test('admin registration returns spanish message for invalid birth date', functi
     Carbon::setTestNow('2026-05-26');
 
     try {
-        $request = new RegistrationStep1Request();
+        $request = new RegistrationStep1Request;
         $validator = Validator::make(
             publicStep1Payload('2026-01-01'),
             ['student.birth_date' => $request->rules()['student.birth_date']],
@@ -217,7 +243,7 @@ test('public payment step returns spanish message for duplicated voucher', funct
     $service = app(StudentService::class);
     $service->registerStudent(registrationPayload($schedule->id, $career->id, '12344321'));
 
-    $request = new RegistrationStep4Request();
+    $request = new RegistrationStep4Request;
     $payload = [
         'career_id' => $career->id,
         'academic_cycle_shift_id' => $schedule->id,
@@ -291,7 +317,7 @@ test('public registration rejects birth dates for students younger than fifteen'
     Carbon::setTestNow('2026-05-26');
 
     try {
-        $request = new RegistrationStep1Request();
+        $request = new RegistrationStep1Request;
         $validator = Validator::make(publicStep1Payload('2026-01-01'), $request->rules(), $request->messages());
 
         expect($validator->fails())->toBeTrue()
@@ -302,7 +328,7 @@ test('public registration rejects birth dates for students younger than fifteen'
 });
 
 test('public registration returns spanish messages for numeric fields', function () {
-    $step1 = new RegistrationStep1Request();
+    $step1 = new RegistrationStep1Request;
     $step1Payload = publicStep1Payload('2008-01-15');
     $step1Payload['student']['dni'] = '123';
     $step1Payload['student']['phone'] = '987';
@@ -313,7 +339,7 @@ test('public registration returns spanish messages for numeric fields', function
         ->and($step1Validator->errors()->first('student.dni'))->toBe('El DNI del estudiante debe contener exactamente 8 dígitos.')
         ->and($step1Validator->errors()->first('student.phone'))->toBe('El celular del estudiante debe contener exactamente 9 dígitos.');
 
-    $step2 = new RegistrationStep2Request();
+    $step2 = new RegistrationStep2Request;
     $step2Validator = Validator::make([
         'guardian' => [
             'first_name' => 'Maria',
@@ -329,7 +355,7 @@ test('public registration returns spanish messages for numeric fields', function
         ->and($step2Validator->errors()->first('guardian.dni'))->toBe('El DNI del apoderado debe contener exactamente 8 dígitos.')
         ->and($step2Validator->errors()->first('guardian.phone'))->toBe('El celular del apoderado debe contener exactamente 9 dígitos.');
 
-    $step3 = new RegistrationStep3Request();
+    $step3 = new RegistrationStep3Request;
     $step3Validator = Validator::make([
         'school' => [
             'name' => 'Colegio Test',
@@ -343,7 +369,7 @@ test('public registration returns spanish messages for numeric fields', function
     expect($step3Validator->fails())->toBeTrue()
         ->and($step3Validator->errors()->first('school.graduation_year'))->toBe('El año de egreso debe contener exactamente 4 dígitos.');
 
-    $step4 = new RegistrationStep4Request();
+    $step4 = new RegistrationStep4Request;
     $step4Validator = Validator::make([
         'career_id' => 1,
         'academic_cycle_shift_id' => 1,
@@ -359,6 +385,92 @@ test('public registration returns spanish messages for numeric fields', function
         ->and($step4Validator->errors()->first('student.payment_agency_number'))->toBe('El número de agencia debe contener exactamente 4 dígitos.');
 });
 
+test('public guardian step does not require guardian for adult students', function () {
+    Carbon::setTestNow('2026-05-26');
+
+    try {
+        $this->withSession([
+            'public_registration' => [
+                'student' => publicStep1Payload('2008-05-26')['student'],
+            ],
+        ])->post('/registration/step/2', [
+            'guardian' => [],
+        ])
+            ->assertRedirect('/registration/step/3')
+            ->assertSessionHas('public_registration.guardian', []);
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+test('adult students can skip guardian even with partial guardian input', function () {
+    Carbon::setTestNow('2026-05-26');
+
+    try {
+        $this->withSession([
+            'public_registration' => [
+                'student' => publicStep1Payload('2008-05-26')['student'],
+            ],
+        ])->post('/registration/step/2', [
+            'skip_guardian' => '1',
+            'guardian' => [
+                'first_name' => 'Maria',
+            ],
+        ])
+            ->assertRedirect('/registration/step/3')
+            ->assertSessionHas('public_registration.guardian', []);
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+test('minor students cannot skip guardian', function () {
+    Carbon::setTestNow('2026-05-26');
+
+    try {
+        $this->withSession([
+            'public_registration' => [
+                'student' => publicStep1Payload('2009-05-27')['student'],
+            ],
+        ])->from('/registration/step/2')
+            ->post('/registration/step/2', [
+                'skip_guardian' => '1',
+                'guardian' => [],
+            ])
+            ->assertRedirect('/registration/step/2')
+            ->assertSessionHasErrors(['guardian.first_name']);
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
+test('public guardian step keeps optional guardian for adult students', function () {
+    Carbon::setTestNow('2026-05-26');
+
+    try {
+        $guardian = [
+            'first_name' => 'Maria',
+            'last_name' => 'Lopez',
+            'mother_last_name' => 'Rios',
+            'dni' => '12345678',
+            'phone' => '987654322',
+            'relationship' => 'mother',
+        ];
+
+        $this->withSession([
+            'public_registration' => [
+                'student' => publicStep1Payload('2008-05-26')['student'],
+            ],
+        ])->post('/registration/step/2', [
+            'guardian' => $guardian,
+        ])
+            ->assertRedirect('/registration/step/3')
+            ->assertSessionHas('public_registration.guardian', $guardian);
+    } finally {
+        Carbon::setTestNow();
+    }
+});
+
 test('public registration builds student address from peru location fields', function () {
     $this->post('/registration/step/1', publicStep1Payload('2008-01-15'))
         ->assertRedirect('/registration/step/2')
@@ -370,7 +482,7 @@ test('public registration builds student address from peru location fields', fun
 });
 
 test('public registration returns spanish messages for empty student required fields', function () {
-    $step1 = new RegistrationStep1Request();
+    $step1 = new RegistrationStep1Request;
     $payload = publicStep1Payload('');
     $payload['student']['first_name'] = '';
     $payload['student']['last_name'] = '';
@@ -390,10 +502,10 @@ test('public registration returns spanish messages for empty student required fi
 
 test('public registration required messages do not fall back to english', function () {
     $requests = [
-        new RegistrationStep1Request(),
-        new RegistrationStep2Request(),
-        new RegistrationStep3Request(),
-        new RegistrationStep4Request(),
+        new RegistrationStep1Request,
+        new RegistrationStep2Request,
+        new RegistrationStep3Request,
+        new RegistrationStep4Request,
     ];
 
     $messages = collect($requests)
@@ -462,7 +574,7 @@ test('public results returns spanish message for incomplete or long dni', functi
 });
 
 test('public registration returns spanish messages for empty numeric fields', function () {
-    $step1 = new RegistrationStep1Request();
+    $step1 = new RegistrationStep1Request;
     $step1Payload = publicStep1Payload('2008-01-15');
     $step1Payload['student']['dni'] = '';
     $step1Payload['student']['phone'] = '';
@@ -473,7 +585,7 @@ test('public registration returns spanish messages for empty numeric fields', fu
         ->and($step1Validator->errors()->first('student.dni'))->toBe('Ingrese el DNI del estudiante.')
         ->and($step1Validator->errors()->first('student.phone'))->toBe('Ingrese el celular del estudiante.');
 
-    $step2 = new RegistrationStep2Request();
+    $step2 = new RegistrationStep2Request;
     $step2Validator = Validator::make([
         'guardian' => [
             'first_name' => 'Maria',
@@ -489,7 +601,7 @@ test('public registration returns spanish messages for empty numeric fields', fu
         ->and($step2Validator->errors()->first('guardian.dni'))->toBe('Ingrese el DNI del apoderado.')
         ->and($step2Validator->errors()->first('guardian.phone'))->toBe('Ingrese el celular del apoderado.');
 
-    $step3 = new RegistrationStep3Request();
+    $step3 = new RegistrationStep3Request;
     $step3Validator = Validator::make([
         'school' => [
             'name' => 'Colegio Test',
@@ -503,7 +615,7 @@ test('public registration returns spanish messages for empty numeric fields', fu
     expect($step3Validator->fails())->toBeTrue()
         ->and($step3Validator->errors()->first('school.graduation_year'))->toBe('Ingrese el año de egreso.');
 
-    $step4 = new RegistrationStep4Request();
+    $step4 = new RegistrationStep4Request;
     $step4Validator = Validator::make([
         'career_id' => 1,
         'academic_cycle_shift_id' => 1,
@@ -542,7 +654,7 @@ test('admin registration rejects birth dates for students younger than fifteen',
         $payload = registrationPayload($schedule->id, $career->id, '22223333');
         $payload['student']['birth_date'] = '2026-01-01';
 
-        $request = new StoreStudentRequest();
+        $request = new StoreStudentRequest;
         $request->merge($payload);
         $validator = Validator::make($payload, $request->rules(), $request->messages());
 

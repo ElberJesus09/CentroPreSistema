@@ -35,7 +35,14 @@ class LoginController extends Controller
                 ->onlyInput('username');
         }
 
-        if (! $staff->canAccessStudentsModule() && ! $staff->canAccessStaffModule() && ! $staff->canAccessAcademicCyclesModule()) {
+        if (
+            ! $staff->can('dashboard.view')
+            && ! $staff->canAccessStudentsModule()
+            && ! $staff->canAccessStaffModule()
+            && ! $staff->canAccessAcademicCyclesModule()
+            && ! $staff->canAccessAcademicManagementModule()
+            && ! $staff->canAccessReportsModule()
+        ) {
             return back()
                 ->withErrors(['username' => 'Su usuario no tiene acceso al panel administrativo.'])
                 ->onlyInput('username');

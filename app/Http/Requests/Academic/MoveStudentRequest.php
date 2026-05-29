@@ -8,7 +8,13 @@ class MoveStudentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->canAccessAcademicManagementModule() ?? false;
+        $user = $this->user();
+
+        return $user !== null && (
+            $user->can('academic.distribution.manage')
+            || $user->isSuperAdmin()
+            || $user->isAdmin()
+        );
     }
 
     public function rules(): array

@@ -6,12 +6,25 @@ use App\Services\AcademicCycleService;
 use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class DashboardController extends Controller
 {
     public function __invoke(Request $request, AcademicCycleService $academicCycleService, DashboardService $dashboardService): View
     {
         $user = auth()->user();
+        abort_unless(
+            $user !== null && (
+                $user->can('dashboard.view')
+                || $user->canAccessStudentsModule()
+                || $user->canAccessStaffModule()
+                || $user->canAccessAcademicCyclesModule()
+                || $user->canAccessAcademicManagementModule()
+                || $user->canAccessReportsModule()
+            ),
+            Response::HTTP_FORBIDDEN,
+        );
+
         $year = $this->optionalInt($request->query('year'));
         $careerId = $this->optionalInt($request->query('career_id'));
         $academicCycleId = $this->optionalInt($request->query('academic_cycle_id'));

@@ -378,11 +378,13 @@
                 </div>
             </td>
 
+            @if ($student->guardian)
             <td>
                 <div class="line">
                     Firma del apoderado
                 </div>
             </td>
+            @endif
         </tr>
     </table>
 

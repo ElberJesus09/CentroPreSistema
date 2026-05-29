@@ -8,6 +8,8 @@ use ZipArchive;
 
 class AcademicFileParser
 {
+    private const int MAX_XML_ENTRY_BYTES = 2_000_000;
+
     /**
      * @return array<int, array<int, string>>
      */
@@ -66,6 +68,9 @@ class AcademicFileParser
             throw new RuntimeException('No se pudo leer el archivo Excel.');
         }
 
+        $this->assertEntryIsSmallEnough($zip, 'xl/worksheets/sheet1.xml');
+        $this->assertEntryIsSmallEnough($zip, 'xl/sharedStrings.xml', required: false);
+
         $sharedStrings = $this->sharedStrings($zip);
         $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
         $zip->close();
@@ -74,7 +79,7 @@ class AcademicFileParser
             throw new RuntimeException('El archivo Excel no contiene una hoja válida.');
         }
 
-        $xml = simplexml_load_string($sheetXml);
+        $xml = simplexml_load_string($sheetXml, options: LIBXML_NONET);
         if ($xml === false) {
             throw new RuntimeException('El archivo Excel tiene una estructura inválida.');
         }
@@ -107,7 +112,7 @@ class AcademicFileParser
             return [];
         }
 
-        $xml = simplexml_load_string($xmlContent);
+        $xml = simplexml_load_string($xmlContent, options: LIBXML_NONET);
         if ($xml === false) {
             return [];
         }
@@ -130,6 +135,23 @@ class AcademicFileParser
         }
 
         return max(0, $index - 1);
+    }
+
+    private function assertEntryIsSmallEnough(ZipArchive $zip, string $entryName, bool $required = true): void
+    {
+        $stat = $zip->statName($entryName);
+
+        if ($stat === false) {
+            if ($required) {
+                throw new RuntimeException('El archivo Excel no contiene una hoja vÃ¡lida.');
+            }
+
+            return;
+        }
+
+        if (($stat['size'] ?? 0) > self::MAX_XML_ENTRY_BYTES) {
+            throw new RuntimeException('El archivo Excel es demasiado grande para procesarlo de forma segura.');
+        }
     }
 
     /**

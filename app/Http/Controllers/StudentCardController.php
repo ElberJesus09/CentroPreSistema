@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Student;
 use App\Services\StudentCardService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -13,7 +12,7 @@ class StudentCardController extends Controller
 {
     public function create(Request $request, StudentCardService $studentCardService): View
     {
-        $this->authorize('viewAny', Student::class);
+        $this->authorizeStudentDocuments($request);
 
         return view('students.cards.create', [
             'cycles' => $studentCardService->cycles(),
@@ -30,7 +29,7 @@ class StudentCardController extends Controller
 
     public function download(Request $request, StudentCardService $studentCardService): Response
     {
-        $this->authorize('viewAny', Student::class);
+        $this->authorizeStudentDocuments($request);
 
         $filters = [
             'student' => trim((string) $request->query('student', '')),
@@ -68,5 +67,15 @@ class StudentCardController extends Controller
         $i = filter_var($value, FILTER_VALIDATE_INT);
 
         return $i === false ? null : $i;
+    }
+
+    private function authorizeStudentDocuments(Request $request): void
+    {
+        $user = $request->user();
+
+        abort_unless(
+            $user !== null && ($user->can('students.documents') || $user->isSuperAdmin() || $user->isAdmin()),
+            403,
+        );
     }
 }

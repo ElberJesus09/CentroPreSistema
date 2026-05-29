@@ -1,31 +1,3 @@
-const studentAutofillFields = {
-    student: [
-        'first_name',
-        'last_name',
-        'mother_last_name',
-        'birth_date',
-        'gender',
-        'phone',
-        'address',
-        'email',
-    ],
-    guardian: [
-        'first_name',
-        'last_name',
-        'mother_last_name',
-        'dni',
-        'phone',
-        'relationship',
-    ],
-    school: [
-        'name',
-        'department',
-        'province',
-        'district',
-        'graduation_year',
-    ],
-};
-
 function debounce(callback, delay = 350) {
     let timer = null;
 
@@ -33,24 +5,6 @@ function debounce(callback, delay = 350) {
         window.clearTimeout(timer);
         timer = window.setTimeout(() => callback(...args), delay);
     };
-}
-
-function fieldFor(section, key) {
-    return document.querySelector(`[name="${section}[${key}]"]`);
-}
-
-function setFieldValue(section, key, value) {
-    if (value === null || value === undefined || value === '') {
-        return;
-    }
-
-    const field = fieldFor(section, key);
-    if (!field || (field.value && field.value !== value)) {
-        return;
-    }
-
-    field.value = value;
-    field.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function setAutofillMessage(input, message, tone = 'neutral') {
@@ -72,46 +26,18 @@ function setAutofillMessage(input, message, tone = 'neutral') {
     target.textContent = message;
 }
 
-async function lookupStudentProfile(input) {
+function normalizeStudentDni(input) {
     const dni = input.value.replace(/\D/g, '');
     if (input.value !== dni) {
         input.value = dni;
     }
 
     if (dni.length !== 8) {
-        setAutofillMessage(input, 'Ingrese 8 dígitos para buscar registros previos.');
+        setAutofillMessage(input, 'Ingrese 8 digitos.');
         return;
     }
 
-    setAutofillMessage(input, 'Buscando registros previos...');
-
-    try {
-        const response = await fetch(`/registration/dni-lookup?dni=${encodeURIComponent(dni)}`, {
-            headers: {
-                Accept: 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-        });
-
-        if (!response.ok) {
-            setAutofillMessage(input, 'No se pudo consultar el DNI en este momento.', 'warning');
-            return;
-        }
-
-        const data = await response.json();
-        if (!data.found || !data.profile) {
-            setAutofillMessage(input, 'No hay datos previos para este DNI.');
-            return;
-        }
-
-        Object.entries(studentAutofillFields).forEach(([section, fields]) => {
-            fields.forEach((key) => setFieldValue(section, key, data.profile[section]?.[key]));
-        });
-
-        setAutofillMessage(input, 'Datos previos encontrados. Se completaron los campos disponibles.', 'success');
-    } catch {
-        setAutofillMessage(input, 'No se pudo consultar el DNI en este momento.', 'warning');
-    }
+    setAutofillMessage(input, 'DNI completo.', 'success');
 }
 
 function fillSelect(select, values, selectedValue) {
@@ -178,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dniInput.setAttribute('inputmode', 'numeric');
     dniInput.setAttribute('maxlength', '8');
-    dniInput.addEventListener('input', debounce(() => lookupStudentProfile(dniInput)));
+    dniInput.addEventListener('input', debounce(() => normalizeStudentDni(dniInput)));
 });
 
 document.addEventListener('DOMContentLoaded', initPeruAddressSelects);
@@ -208,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         event.preventDefault();
         pendingForm = form;
-        title.textContent = submitter?.dataset.confirmTitle || form.dataset.confirmTitle || 'Confirmar acción';
+        title.textContent = submitter?.dataset.confirmTitle || form.dataset.confirmTitle || 'Confirmar accion';
         message.textContent = confirmMessage;
         accept.textContent = submitter?.dataset.confirmButton || form.dataset.confirmButton || 'Confirmar';
         dialog.showModal();

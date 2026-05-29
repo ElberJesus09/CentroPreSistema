@@ -31,6 +31,8 @@ class AcademicReportController extends Controller
 
     public function excel(Request $request, GradeService $service): StreamedResponse
     {
+        $this->authorizeReportExport($request);
+
         $request->validate([
             'academic_cycle_id' => ['required', 'integer', 'exists:academic_cycles,id'],
             'career_id' => ['nullable', 'integer', 'exists:careers,id'],
@@ -43,6 +45,8 @@ class AcademicReportController extends Controller
 
     public function pdf(Request $request, GradeService $service): Response
     {
+        $this->authorizeReportExport($request);
+
         $request->validate([
             'academic_cycle_id' => ['required', 'integer', 'exists:academic_cycles,id'],
             'career_id' => ['nullable', 'integer', 'exists:careers,id'],
@@ -66,5 +70,15 @@ class AcademicReportController extends Controller
         $i = filter_var($value, FILTER_VALIDATE_INT);
 
         return $i === false ? null : $i;
+    }
+
+    private function authorizeReportExport(Request $request): void
+    {
+        $user = $request->user();
+
+        abort_unless(
+            $user !== null && ($user->can('academic.reports.export') || $user->isSuperAdmin() || $user->isAdmin()),
+            403,
+        );
     }
 }

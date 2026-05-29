@@ -8,7 +8,13 @@ class ImportAcademicFileRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->canAccessAcademicManagementModule() ?? false;
+        $user = $this->user();
+
+        return $user !== null && (
+            $user->can('academic.imports.manage')
+            || $user->isSuperAdmin()
+            || $user->isAdmin()
+        );
     }
 
     public function rules(): array

@@ -57,6 +57,8 @@ class DistributionController extends Controller
 
     public function confirmImport(Request $request, AcademicDistributionService $service): RedirectResponse
     {
+        $this->authorizeAcademicImport($request);
+
         $data = session('academic_placement_import');
         if (! is_array($data) || ! Storage::exists((string) ($data['path'] ?? ''))) {
             return back()->with('warning', 'La vista previa venció. Vuelve a cargar el archivo.');
@@ -77,6 +79,8 @@ class DistributionController extends Controller
 
     public function distribute(Request $request, AcademicDistributionService $service): RedirectResponse
     {
+        $this->authorizeDistributionManage($request);
+
         $request->validate([
             'academic_cycle_id' => ['required', 'integer', 'exists:academic_cycles,id'],
             'regenerate' => ['nullable', 'boolean'],
@@ -102,6 +106,8 @@ class DistributionController extends Controller
 
     public function toggleLock(StudentClassroomAssignment $assignment, AcademicDistributionService $service): RedirectResponse
     {
+        $this->authorizeDistributionManage(request());
+
         $service->toggleLock($assignment);
 
         return back()->with('success', $assignment->fresh()?->distribution_locked ? 'Alumno bloqueado para conservar su aula.' : 'Alumno desbloqueado para redistribución.');
@@ -132,5 +138,25 @@ class DistributionController extends Controller
         $value = is_string($value) ? trim($value) : '';
 
         return array_key_exists($value, AcademicGroupCatalog::groups()) ? $value : null;
+    }
+
+    private function authorizeAcademicImport(Request $request): void
+    {
+        $user = $request->user();
+
+        abort_unless(
+            $user !== null && ($user->can('academic.imports.manage') || $user->isSuperAdmin() || $user->isAdmin()),
+            403,
+        );
+    }
+
+    private function authorizeDistributionManage(Request $request): void
+    {
+        $user = $request->user();
+
+        abort_unless(
+            $user !== null && ($user->can('academic.distribution.manage') || $user->isSuperAdmin() || $user->isAdmin()),
+            403,
+        );
     }
 }

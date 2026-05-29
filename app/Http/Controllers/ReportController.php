@@ -41,6 +41,8 @@ class ReportController extends Controller
 
     public function download(Request $request, ReportService $reportService, ActivityLogService $activityLogService): Response
     {
+        $this->authorizeReportExport($request);
+
         $year = $this->optionalInt($request->query('year'));
         $careerId = $this->optionalInt($request->query('career_id'));
         $academicCycleId = $this->optionalInt($request->query('academic_cycle_id'));
@@ -69,6 +71,8 @@ class ReportController extends Controller
 
     public function downloadEmails(Request $request, ReportService $reportService, ActivityLogService $activityLogService): StreamedResponse
     {
+        $this->authorizeReportExport($request);
+
         $year = $this->optionalInt($request->query('year'));
         $careerId = $this->optionalInt($request->query('career_id'));
         $academicCycleId = $this->optionalInt($request->query('academic_cycle_id'));
@@ -164,5 +168,15 @@ class ReportController extends Controller
         $staff = $activityLogService->staffOptions()->firstWhere('id', $staffId);
 
         return $staff === null ? 'Usuario eliminado' : trim("{$staff->first_name} {$staff->last_name} ({$staff->username})");
+    }
+
+    private function authorizeReportExport(Request $request): void
+    {
+        $user = $request->user();
+
+        abort_unless(
+            $user !== null && ($user->can('reports.export') || $user->isSuperAdmin() || $user->isAdmin()),
+            403,
+        );
     }
 }

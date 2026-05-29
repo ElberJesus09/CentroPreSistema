@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Permissions;
 
+use App\Models\Role;
+use App\Models\Staff;
 use App\Support\Permissions\PermissionCatalog;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -11,8 +13,13 @@ class UpdateStaffDirectPermissionsRequest extends FormRequest
     public function authorize(): bool
     {
         $user = $this->user();
+        $staff = $this->route('staff');
 
-        return $user?->can('roles.update') || $user?->isSuperAdmin();
+        if (! ($user?->can('roles.update') || $user?->isSuperAdmin())) {
+            return false;
+        }
+
+        return ! ($staff instanceof Staff && $staff->role?->name === Role::NAME_SUPER_ADMIN && ! $user->isSuperAdmin());
     }
 
     /**

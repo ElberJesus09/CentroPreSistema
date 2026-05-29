@@ -18,6 +18,7 @@ use App\Services\StudentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -69,10 +70,11 @@ class RegistrationWizardController extends Controller
             'schedules' => $schedules,
             'previewCareer' => $previewCareer,
             'previewSchedule' => $previewSchedule,
+            'guardianRequired' => $this->guardianRequiredForDraft($draft),
         ]);
     }
 
-    public function storeStep1(RegistrationStep1Request $request, StudentService $studentService): RedirectResponse
+    public function storeStep1(RegistrationStep1Request $request): RedirectResponse
     {
         $validated = $request->validated();
         $draft = $request->session()->get(self::SESSION_KEY, []);
@@ -84,25 +86,16 @@ class RegistrationWizardController extends Controller
             'address_line' => $validated['address_line'],
         ];
 
-        $profile = $studentService->profileForDni((string) $draft['student']['dni']);
-        if (is_array($profile)) {
-            $draft['guardian'] ??= $profile['guardian'] ?? null;
-            $draft['school'] ??= $profile['school'] ?? null;
-        }
-
         $request->session()->put(self::SESSION_KEY, $draft);
 
         return redirect()->route('registration.step.show', ['step' => 2]);
     }
 
-    public function lookupDni(Request $request, StudentService $studentService): JsonResponse
+    public function lookupDni(): JsonResponse
     {
-        $dni = (string) $request->query('dni', '');
-        $profile = $studentService->profileForDni($dni);
-
         return response()->json([
-            'found' => $profile !== null,
-            'profile' => $profile,
+            'found' => false,
+            'profile' => null,
         ]);
     }
 
@@ -112,7 +105,7 @@ class RegistrationWizardController extends Controller
         if (! isset($draft['student'])) {
             return redirect()->route('registration.step.show', ['step' => 1]);
         }
-        $draft['guardian'] = $request->validated('guardian');
+        $draft['guardian'] = $request->validated('guardian') ?? [];
         $request->session()->put(self::SESSION_KEY, $draft);
 
         return redirect()->route('registration.step.show', ['step' => 3]);
@@ -201,5 +194,23 @@ class RegistrationWizardController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $draft
+     */
+    private function guardianRequiredForDraft(array $draft): bool
+    {
+        $birthDate = data_get($draft, 'student.birth_date');
+
+        if (! is_string($birthDate) || trim($birthDate) === '') {
+            return true;
+        }
+
+        try {
+            return Carbon::parse($birthDate)->age < 18;
+        } catch (\Throwable) {
+            return true;
+        }
     }
 }
